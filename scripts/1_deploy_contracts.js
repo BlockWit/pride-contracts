@@ -1,7 +1,6 @@
 const Configurator = artifacts.require('Configurator');
 const Token = artifacts.require('PrideToken');
 const TokenDepositor = artifacts.require('TokenDepositor');
-const Sale = artifacts.require('CrowdSale');
 const Wallet = artifacts.require('VestingWallet');
 const { logger } = require('./util');
 
@@ -14,9 +13,6 @@ async function deploy () {
 
   const wallet = await Wallet.new({ from: deployer });
   log(`Wallet deployed: @address{${wallet.address}}`);
-
-  const sale = await Sale.new({ from: deployer });
-  log(`Sale deployed: @address{${sale.address}}`);
 
   const depositor = await TokenDepositor.new({ from: deployer });
   log(`Depositor deployed: @address{${depositor.address}}`);
