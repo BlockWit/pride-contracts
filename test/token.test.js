@@ -8,7 +8,7 @@ const {shouldBehaveLikeERC20Burnable} = require("./behaviors/ERC20Burnable.behav
 const Token = contract.fromArtifact('PrideToken');
 
 const [account1, account2, account3, owner ] = accounts;
-const TOTAL_SUPPLY = ether('500000000');
+const TOTAL_SUPPLY = ether('250000000');
 
 describe('ERC20', function () {
   beforeEach(async function () {

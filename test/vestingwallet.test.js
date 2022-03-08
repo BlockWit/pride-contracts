@@ -13,7 +13,7 @@ describe('VestingWallet', async () => {
   let wallet;
 
   beforeEach(async () => {
-    token = await Token.new([owner], balances, { from: owner });
+    token = await Token.new({ from: owner });
     wallet = await VestingWallet.new({ from: owner });
     await wallet.setToken(token.address, { from: owner });
   });
