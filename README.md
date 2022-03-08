@@ -16,8 +16,9 @@ Pride smart-contract
 
 ### Contracts
 1. _PrideToken_- Token contract
-2. _CrowdSale_ - Sale contract
-3. _VestingWallet_ - Wallet contract
+2. _VestingWallet_ - Wallet contract
+3. _TokenDepositor_ - Helper contract for batch token distribution
+4. _Configurator_ - Smart contract for initial configuration
 
 ### How to work with this project
 #### To start working with the contracts, please, follow theese steps for each contract:
@@ -56,11 +57,10 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 
 ## Test network configuration (BSC Testnet)
 ### Contracts
-* [Token](https://testnet.bscscan.com/token/)
-* [VestingWallet](https://testnet.bscscan.com/address/)
-* [Sale](https://testnet.bscscan.com/address/)
+* [Token](https://testnet.bscscan.com/token/0x0D8E7c62f192725d14559cC1DfDD884F9e8BA7Fb)
+* [VestingWallet](https://testnet.bscscan.com/address/0xed3956e63bC7d848950BcC6B2B1c7957d5BBE7a4)
 
-You can find test log [here](docs/bsctestnet.log.md)
+You can find test log [here](docs/testnet.log.md)
 
 ## User's guide
 You can find the user guide for end-users [here](docs/user.md)
