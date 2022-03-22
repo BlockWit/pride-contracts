@@ -65,6 +65,3 @@ You can find test log [here](docs/testnet.log.md)
 
 ## User's guide
 You can find the user guide for end-users [here](docs/user.md)
-
-## Manager's guide
-Our manager's guide can be found [here](docs/manager.md)  
