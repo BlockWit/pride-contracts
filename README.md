@@ -50,10 +50,11 @@ Pride smart-contract
 EXODUS does not support BEP20, but provides the ability to export the private key to MyEtherWallet - http://support.exodus.io/article/128-how-do-i-receive-unsupported-erc20-tokens
 
 ## Main network configuration
-
 ### Contracts
-* WIP
-
+* [Token](https://bscscan.com/address/0x085d15db9c7cd3df188422f88ec41ec573d691b9)
+* [Vesting Wallet](https://bscscan.com/address/0xA8d3eEF1ca4f3eFB7289B19E31885a149B211Bd7)
+* [Token Depositor](https://bscscan.com/address/0xF26e41b7ca8C8dAdc8798D75D85FBD853883234F)
+* [Configurator](https://testnet.bscscan.com/address/0xB5037be25B0D4CC949f9BBFA2BaE62e3FcCca0DD)
 
 ## Test network configuration (BSC Testnet)
 ### Contracts
