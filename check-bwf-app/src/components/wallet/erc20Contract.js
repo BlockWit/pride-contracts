@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { useWeb3 } from './walletUtils';
 import { parseEther } from 'ethers/lib/utils';
 
 const ERC20_ABI = [
@@ -11,10 +10,6 @@ const ERC20_ABI = [
 ];
 
 const ERC20_ADDRESS = '0x7279F00ed15244fc0d97e35B463802Fc501C3811';
-
-export const useERC20Contract = () => {
-  return erc20ContractFromProvider(useWeb3());
-};
 
 export const erc20ContractFromProvider = (web3provider) => {
   return new ethers.Contract(ERC20_ADDRESS, ERC20_ABI, web3provider);

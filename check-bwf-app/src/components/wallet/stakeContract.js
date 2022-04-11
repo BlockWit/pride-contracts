@@ -1,5 +1,4 @@
 import { ethers } from 'ethers';
-import { useWeb3 } from './walletUtils';
 import { parseEther } from 'ethers/lib/utils';
 
 const STAKING_ABI = [
@@ -15,10 +14,6 @@ export const STAKING_ADDRESS = '0x6Dc95cBB2FCB6F481352389299de0EAc64a7D0d4';
 
 const stakeContractFromProvider = (web3provider) => {
   return new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, web3provider);
-};
-
-const useStakeContract = () => {
-  return stakeContractFromProvider(useWeb3());
 };
 
 export async function withdraw (web3Provider, stakeIndex) {
