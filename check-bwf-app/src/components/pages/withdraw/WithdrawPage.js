@@ -138,7 +138,7 @@ const WithdrawPage = () => {
       const items = state.stakerInfo;
       const reversedItems = [];
       for(let i = items.length - 1; i >= 0; i--) {
-        console.log("items i ", items[i]);
+        reversedItems.push(items[i]);
       }
       return <DataListView items={reversedItems} options={options}/>;
 
