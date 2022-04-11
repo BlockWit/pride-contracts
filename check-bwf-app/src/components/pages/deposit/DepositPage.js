@@ -113,15 +113,15 @@ const DepositPage = () => {
             <Grid container spacing={3}>
               <Grid item xs={12}>
                 <Button color="primary" fullWidth type="submit" variant="contained"
-                        onClick={(e) => onClickProgram(e, 0)}>Deposit {state.approveAmount} to program 3m</Button>
+                        onClick={(e) => onClickProgram(e, 0)}>Deposit {state.approveAmount} to program 40 days</Button>
               </Grid>
               <Grid item xs={12}>
                 <Button color="primary" fullWidth type="submit" variant="contained"
-                        onClick={(e) => onClickProgram(e, 1)}>Deposit {state.approveAmount} to program 6m</Button>
+                        onClick={(e) => onClickProgram(e, 1)}>Deposit {state.approveAmount} to program 3 month</Button>
               </Grid>
               <Grid item xs={12}>
                 <Button color="primary" fullWidth type="submit" variant="contained"
-                        onClick={(e) => onClickProgram(e, 2)}>Deposit {state.approveAmount} to program 12m</Button>
+                        onClick={(e) => onClickProgram(e, 2)}>Deposit {state.approveAmount} to program 6 month</Button>
               </Grid>
             </Grid>
           </form>

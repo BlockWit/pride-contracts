@@ -10,7 +10,7 @@ const ERC20_ABI = [
   'function approve(address spender, uint256 amount) external returns (bool)'
 ];
 
-const ERC20_ADDRESS = '0x60CA35A6FD8Ea3560176475CedAbac8a5DB4E4cF';
+const ERC20_ADDRESS = '0x7279F00ed15244fc0d97e35B463802Fc501C3811';
 
 export const useERC20Contract = () => {
   return erc20ContractFromProvider(useWeb3());

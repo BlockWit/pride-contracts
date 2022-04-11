@@ -135,8 +135,12 @@ const WithdrawPage = () => {
         }
       };
 
-      //const options = {};
-      return <DataListView items={state.stakerInfo} options={options}/>;
+      const items = state.stakerInfo;
+      const reversedItems = [];
+      for(let i = items.length - 1; i >= 0; i--) {
+        console.log("items i ", items[i]);
+      }
+      return <DataListView items={reversedItems} options={options}/>;
 
     } else {
       allStakerInfo(web3Provider, account)

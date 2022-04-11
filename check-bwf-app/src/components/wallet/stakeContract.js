@@ -11,7 +11,7 @@ const STAKING_ABI = [
   'function getStakerStakeParams(address stakerAddress, uint stakeIndex) public view returns(bool closed, uint amount, uint amountAfter, uint stakeType, uint start, uint finished)'
 ];
 
-export const STAKING_ADDRESS = '0xBEE3f6a9CAD29CA57D56Ca26c3F03fE66833d9a4';
+export const STAKING_ADDRESS = '0x6Dc95cBB2FCB6F481352389299de0EAc64a7D0d4';
 
 const stakeContractFromProvider = (web3provider) => {
   return new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, web3provider);
