@@ -217,11 +217,6 @@ describe('Staking', async () => {
   });
 
   describe('withdrawSpecified', function () {
-    it('not owner can not call withdrawSpecified', async function () {
-      await expectRevert(staking.withdrawSpecified(account4, ether('100'), {from: account1}),
-        'Ownable: caller is not the owner'
-      );
-    });
     it('owner withdrawSpecified works correctly for full withdraw', async function () {
       await staking.configure(token.address, account4, {from: owner});
       const withdrawBalance = ether('100');
@@ -245,11 +240,6 @@ describe('Staking', async () => {
   });
 
   describe('setFineWallet', function () {
-    it('not owner can not call setFineWallet', async function () {
-      await expectRevert(staking.setFineWallet(account4, {from: account1}),
-        'Ownable: caller is not the owner'
-      );
-    });
     it('owner setFineWallet works correctly', async function () {
       await staking.setFineWallet(account4, {from: owner});
       expect(await staking.fineWallet()).to.be.equal(account4);
@@ -257,18 +247,90 @@ describe('Staking', async () => {
   });
 
   describe('setToken', function () {
-    it('not owner can not call setToken', async function () {
-      await expectRevert(staking.setToken(token.address, {from: account1}),
-        'Ownable: caller is not the owner'
-      );
-    });
     it('owner setToken works correctly', async function () {
       await staking.setToken(token.address, {from: owner});
       expect(await staking.token()).to.be.equal(token.address);
     });
   });
 
+  describe('setPaused', function () {
+    it('owner setPaused works correctly', async function () {
+      await staking.setPaused(true, {from: owner});
+      expect(await staking.paused()).to.be.equal(true);
+      await staking.setPaused(false, {from: owner});
+      expect(await staking.paused()).to.be.equal(false);
+    });
+    it('can not call deposit on paused contract', async function () {
+      await staking.setPaused(true, {from: owner});
+      await expectRevert(staking.deposit(STAKE_PROGRAM_1_BN, ether('100'), {from: account1}),
+        'Deposit program paused.'
+      );
+      await expectRevert(staking.withdraw(ONE_BN, {from: account1}),
+        'Deposit program paused.'
+      );
+    });
+    it('can call deposit and withdraw after unpaused', async function () {
+      await staking.setPaused(true, {from: owner});
+      expect(await staking.paused()).to.be.equal(true);
+      await staking.setPaused(false, {from: owner});
+      expect(await staking.paused()).to.be.equal(false);
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = ether('100');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_2_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_2_BN, ZERO_BN]);
+      const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+      await increaseStakePeriod(STAKE_PROGRAM_2);
+      // fill contract to withdraw rewards
+      const rewardAfterFineShouldBeBN = reward(account1DepositBN, STAKE_PROGRAM_2);
+      await token.transfer(staking.address, rewardAfterFineShouldBeBN.sub(account1DepositBN), {from: account2});
+      const finishedTx = await staking.withdraw(stakeIndex, {from: account1});
+      expectEvent(finishedTx.receipt, 'Withdraw', [account1, rewardAfterFineShouldBeBN, STAKE_PROGRAM_2_BN, ZERO_BN]);
+      const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
+      expect(finishedTimestampBN).to.be.bignumber.greaterThan(depositTimestampBN);
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.finished).to.be.bignumber.equal(finishedTimestampBN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN).add(rewardAfterFineShouldBeBN));
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+    });
+  });
+
   describe('Check only owner functions throws corresponding excepion', function () {
+    it('setPaused', async function () {
+      await expectRevert(staking.setPaused(true, {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
+    it('withdrawSpecified', async function () {
+      await expectRevert(staking.withdrawSpecified(account4, ether('100'), {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
+    it('setFineWallet', async function () {
+      await expectRevert(staking.setFineWallet(account4, {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
+    it('withdrawAll', async function () {
+      await expectRevert(staking.withdrawAll(account2, {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
+    it('configure', async function () {
+      await expectRevert(staking.configure(token.address, account4, {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
     it('addStakeTypeWithFines', async function () {
       await expectRevert(staking.addStakeTypeWithFines(1, 2, [3, 3], [1, 2], {from: account1}),
         'Ownable: caller is not the owner'
@@ -294,14 +356,14 @@ describe('Staking', async () => {
         'Ownable: caller is not the owner'
       );
     });
-  });
-
-  describe('configure', function () {
-    it('not owner can not configure', async function () {
-      await expectRevert(staking.configure(token.address, account4, {from: account1}),
+    it('adminWithdraw', async function () {
+      await expectRevert(staking.adminWithdraw(token.address, ONE_BN, {from: account1}),
         'Ownable: caller is not the owner'
       );
     });
+  });
+
+  describe('configure', function () {
     it('owner configure works correctly', async function () {
       await staking.configure(token.address, account4, {from: owner});
       expect(await staking.token()).to.be.equal(token.address);
@@ -327,11 +389,6 @@ describe('Staking', async () => {
   });
 
   describe('withdrawAll', function () {
-    it('not owner can not withdrawAll', async function () {
-      await expectRevert(staking.withdrawAll(account2, {from: account1}),
-        'Ownable: caller is not the owner'
-      );
-    });
     it('owner can withdrawAll correctly', async function () {
       await staking.configure(token.address, account4, {from: owner});
       expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
@@ -400,6 +457,74 @@ describe('Staking', async () => {
     });
   });
 
+  describe('deposit and withdraw by adminWithdraw', function () {
+    it('deposit and withdraw before stake time limit immediately for first program', async function () {
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = new BN('100123456789000000000');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_1_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+      const finishedTx = await staking.adminWithdraw(account1, stakeIndex, {from: owner});
+      const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
+      expect(finishedTimestampBN.toNumber()).to.be.greaterThanOrEqual(depositTimestampBN.toNumber());
+
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const rewardAfterFineShouldBeBN = account1DepositBN;
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.finished).to.be.bignumber.equal(finishedTimestampBN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN).add(rewardAfterFineShouldBeBN));
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+    });
+    it('deposit and withdraw before stake time limit after third fine period - rewards', async function () {
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = ether('100');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_1_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+      await increaseStakePeriod(STAKE_PROGRAM_1);
+      // fill contract to withdraw rewards
+      const rewardAfterFineShouldBeBN = account1DepositBN;
+      await token.transfer(staking.address, rewardAfterFineShouldBeBN.sub(account1DepositBN), {from: account2});
+      const finishedTx = await staking.adminWithdraw(account1, stakeIndex, {from: owner});
+      expectEvent(finishedTx.receipt, 'Withdraw', [account1, rewardAfterFineShouldBeBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
+      expect(finishedTimestampBN).to.be.bignumber.greaterThan(depositTimestampBN);
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.finished).to.be.bignumber.equal(finishedTimestampBN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN).add(rewardAfterFineShouldBeBN));
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+      // try adminWithdraw twice
+      await expectRevert(staking.adminWithdraw(account1, stakeIndex, {from: owner}),
+        'Stake already closed.'
+      );
+      // try withdraw twice
+      await expectRevert(staking.withdraw(stakeIndex, {from: account1}),
+        'Stake already closed.'
+      );
+    });
+  });
+
   describe('deposit and withdraw', function () {
     it('deposit and withdraw before stake time limit immediately for first program', async function () {
       await staking.configure(token.address, account4, {from: owner});
@@ -423,7 +548,10 @@ describe('Staking', async () => {
       expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
       expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
       expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN).add(rewardAfterFineShouldBeBN));
-      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN).add(rewardAfterFineShouldBeBN));
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(account1DepositBN.sub(rewardAfterFineShouldBeBN));
     });
     it('deposit and withdraw before stake time limit immediately', async function () {
       await staking.configure(token.address, account4, {from: owner});
@@ -463,7 +591,6 @@ describe('Staking', async () => {
 
       const finishedTx = await staking.withdraw(stakeIndex, {from: account1});
       const rewardAfterFineShouldBeBN = stakeAfterFine(account1DepositBN, STAKE_PROGRAM_2, FINE_PERIOD_2_BN);
-      console.log(finishedTx.receipt);
       expectEvent(finishedTx.receipt, 'Withdraw', [account1, rewardAfterFineShouldBeBN, STAKE_PROGRAM_2_BN, ZERO_BN]);
       const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
       expect(finishedTimestampBN).to.be.bignumber.greaterThan(depositTimestampBN);
@@ -595,6 +722,8 @@ describe('Staking', async () => {
       expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
     });
   });
+
+
   describe('integration tests simple', function () {
     it('deposit and withdraw for single user for two different staking programs', async function () {
       await staking.configure(token.address, account4, {from: owner});

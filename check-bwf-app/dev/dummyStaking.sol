@@ -425,7 +425,11 @@ contract StakingProgram is RecoverableFunds {
 
     address public fineWallet;
 
-    uint public summaryFine;
+    uint public summaryFine = 0;
+
+    uint public stakersCount = 0;
+
+    bool public paused = false;
 
     struct StakeType {
         bool active;
@@ -559,13 +563,18 @@ contract StakingProgram is RecoverableFunds {
         token = IERC20(tokenAddress);
     }
 
-    function deposit(uint8 stakeTypeIndex, uint256 amount) public returns (uint) {
+    function setPaused(bool inPaused) public onlyOwner {
+        paused = inPaused;
+    }
+
+    function deposit(uint8 stakeTypeIndex, uint256 amount) public notPaused returns (uint) {
         require(stakeTypeIndex < countOfStakeTypes, "Wrong stake type index");
         StakeType storage stakeType = stakeTypes[stakeTypeIndex];
         require(stakeType.active, "Stake type not active");
 
         Staker storage staker = stakers[_msgSender()];
         if (!staker.exists) {
+            stakersCount++;
             staker.exists = true;
             stakersAddresses.push(_msgSender());
             stakersAddressesCount++;
@@ -633,14 +642,14 @@ contract StakingProgram is RecoverableFunds {
             require(token.transfer(fineWallet, fine), "Can't transfer reward");
         }
 
-        emit Withdraw(_msgSender(), staker.amountAfter[stakeIndex], stakeTypeIndex, stakeIndex);
+        emit Withdraw(stakerAddress, staker.amountAfter[stakeIndex], stakeTypeIndex, stakeIndex);
     }
 
     function adminWithdraw(address stakerAddress, uint8 stakeIndex) public onlyOwner {
         commonWithdraw(stakerAddress, stakeIndex, WITHDRAW_KIND_ALL);
     }
 
-    function withdraw(uint8 stakeIndex) public {
+    function withdraw(uint8 stakeIndex) public notPaused {
         commonWithdraw(_msgSender(), stakeIndex, WITHDRAW_KIND_BY_PROGRAM);
     }
 
@@ -658,6 +667,11 @@ contract StakingProgram is RecoverableFunds {
         //require(stakeType.active, "Stake type not active");
         require(periodIndex < stakeType.finesPeriodsCount, "Requetsed period idnex greater than max period index");
         return (stakeType.fineDays[periodIndex], stakeType.fines[periodIndex]);
+    }
+
+    modifier notPaused() {
+        require(!paused, "Deposit program paused");
+        _;
     }
 
     modifier stakerStakeChecks(address stakerAddress, uint stakeIndex) {
@@ -682,3 +696,4 @@ contract StakingProgram is RecoverableFunds {
     }
 
 }
+

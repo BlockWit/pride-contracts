@@ -89,9 +89,9 @@ const WithdrawPage = () => {
             },
             customWrapper: (value) => {
               const nvalue = parseInt(value);
-              let stakeTypeInfo = '3 month';
-              if (nvalue === 1) stakeTypeInfo = '6 month';
-              if (nvalue === 2) stakeTypeInfo = '12 month';
+              let stakeTypeInfo = '1 month';
+              if (nvalue === 1) stakeTypeInfo = '3 month';
+              if (nvalue === 2) stakeTypeInfo = '6 month';
               return <>{stakeTypeInfo}</>;
             }
           },
