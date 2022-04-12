@@ -67,11 +67,11 @@ contract StakingProgram is RecoverableFunds {
         uint[] memory fineDays = new uint[](1);
         uint[] memory fines = new uint[](1);
 
-        fineDays[0] = 40;
+        fineDays[0] = 30;
 
         fines[0] = 100;
 
-        addStakeTypeWithFines(40, 5, fines, fineDays);
+        addStakeTypeWithFines(30, 24, fines, fineDays);
 
         fineDays = new uint[](3);
         fines = new uint[](3);
@@ -81,11 +81,11 @@ contract StakingProgram is RecoverableFunds {
         fineDays[1] = 60;
         fineDays[2] = 90;
 
-        fines[0] = 70;
-        fines[1] = 25;
+        fines[0] = 100;
+        fines[1] = 50;
         fines[2] = 20;
 
-        addStakeTypeWithFines(90, 6, fines, fineDays);
+        addStakeTypeWithFines(90, 30, fines, fineDays);
 
 
         // 3d
@@ -94,10 +94,10 @@ contract StakingProgram is RecoverableFunds {
         fineDays[2] = 180;
 
         fines[0] = 70;
-        fines[1] = 25;
+        fines[1] = 30;
         fines[2] = 20;
 
-        addStakeTypeWithFines(180, 8, fines, fineDays);
+        addStakeTypeWithFines(180, 36, fines, fineDays);
         token = IERC20(tokenAddress);
 
         firstConfigured = true;
