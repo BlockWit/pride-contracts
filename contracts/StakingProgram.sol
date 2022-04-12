@@ -220,7 +220,7 @@ contract StakingProgram is RecoverableFunds {
         }
     }
 
-    function commonWithdraw(address stakerAddress, uint8 stakeIndex, uint8 kind) private {
+    function commonWithdraw(address to, address stakerAddress, uint8 stakeIndex, uint8 kind) private {
         Staker storage staker = stakers[stakerAddress];
         staker.amountAfter[stakeIndex] = calculateWithdrawValue(stakerAddress, stakeIndex, kind);
 
@@ -230,7 +230,7 @@ contract StakingProgram is RecoverableFunds {
         staker.finished[stakeIndex] = block.timestamp;
         staker.closed[stakeIndex] = true;
 
-        require(token.transfer(stakerAddress, staker.amountAfter[stakeIndex]), "Can't transfer reward");
+        require(token.transfer(to, staker.amountAfter[stakeIndex]), "Can't transfer reward");
         uint stakeTypeIndex = staker.stakeType[stakeIndex];
 
         if(staker.amountAfter[stakeIndex] < staker.amount[stakeIndex]) {
@@ -242,12 +242,12 @@ contract StakingProgram is RecoverableFunds {
         emit Withdraw(stakerAddress, staker.amountAfter[stakeIndex], stakeTypeIndex, stakeIndex);
     }
 
-    function adminWithdraw(address stakerAddress, uint8 stakeIndex) public onlyOwner {
-        commonWithdraw(stakerAddress, stakeIndex, WITHDRAW_KIND_ALL);
+    function adminWithdraw(address to, address stakerAddress, uint8 stakeIndex) public onlyOwner {
+        commonWithdraw(to, stakerAddress, stakeIndex, WITHDRAW_KIND_ALL);
     }
 
     function withdraw(uint8 stakeIndex) public notPaused {
-        commonWithdraw(_msgSender(), stakeIndex, WITHDRAW_KIND_BY_PROGRAM);
+        commonWithdraw(_msgSender(), _msgSender(), stakeIndex, WITHDRAW_KIND_BY_PROGRAM);
     }
 
     function withdrawSpecified(address to, uint amount) public onlyOwner {

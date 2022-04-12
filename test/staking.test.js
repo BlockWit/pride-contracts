@@ -16,7 +16,7 @@ const {latestBlock} = require('@openzeppelin/test-helpers/src/time');
 const Token = contract.fromArtifact('PrideToken');
 const Staking = contract.fromArtifact('StakingProgram');
 
-const [account1, account2, account3, account4, account5, owner] = accounts;
+const [account1, account2, account3, account4, account5, account6, owner] = accounts;
 const SUPPLY1 = ether('50000000');
 const SUPPLY2 = ether('150000000');
 const SUPPLY3 = ether('50000000');
@@ -357,7 +357,7 @@ describe('Staking', async () => {
       );
     });
     it('adminWithdraw', async function () {
-      await expectRevert(staking.adminWithdraw(token.address, ONE_BN, {from: account1}),
+      await expectRevert(staking.adminWithdraw(account2, account4, ONE_BN, {from: account1}),
         'Ownable: caller is not the owner'
       );
     });
@@ -466,7 +466,7 @@ describe('Staking', async () => {
       expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
       const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
       const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
-      const finishedTx = await staking.adminWithdraw(account1, stakeIndex, {from: owner});
+      const finishedTx = await staking.adminWithdraw(account1, account1, stakeIndex, {from: owner});
       const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
       expect(finishedTimestampBN.toNumber()).to.be.greaterThanOrEqual(depositTimestampBN.toNumber());
 
@@ -497,7 +497,7 @@ describe('Staking', async () => {
       // fill contract to withdraw rewards
       const rewardAfterFineShouldBeBN = account1DepositBN;
       await token.transfer(staking.address, rewardAfterFineShouldBeBN.sub(account1DepositBN), {from: account2});
-      const finishedTx = await staking.adminWithdraw(account1, stakeIndex, {from: owner});
+      const finishedTx = await staking.adminWithdraw(account1, account1, stakeIndex, {from: owner});
       expectEvent(finishedTx.receipt, 'Withdraw', [account1, rewardAfterFineShouldBeBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
       const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
       expect(finishedTimestampBN).to.be.bignumber.greaterThan(depositTimestampBN);
@@ -515,7 +515,74 @@ describe('Staking', async () => {
       // check fine wallet balance
       expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
       // try adminWithdraw twice
-      await expectRevert(staking.adminWithdraw(account1, stakeIndex, {from: owner}),
+      await expectRevert(staking.adminWithdraw(account1, account1, stakeIndex, {from: owner}),
+        'Stake already closed.'
+      );
+      // try withdraw twice
+      await expectRevert(staking.withdraw(stakeIndex, {from: account1}),
+        'Stake already closed.'
+      );
+    });
+    it('deposit and withdraw before stake time limit immediately for first program - another wallet', async function () {
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = new BN('100123456789000000000');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_1_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+      const finishedTx = await staking.adminWithdraw(account6, account1, stakeIndex, {from: owner});
+      const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
+      expect(finishedTimestampBN.toNumber()).to.be.greaterThanOrEqual(depositTimestampBN.toNumber());
+
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const rewardAfterFineShouldBeBN = account1DepositBN;
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.finished).to.be.bignumber.equal(finishedTimestampBN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN));
+      expect(await token.balanceOf(account6)).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+    });
+    it('deposit and withdraw before stake time limit after third fine period - rewards - another wallet', async function () {
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = ether('100');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_1_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const depositTimestampBN = new BN((await web3.eth.getBlock(depositTx.receipt.blockNumber)).timestamp);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+      await increaseStakePeriod(STAKE_PROGRAM_1);
+      // fill contract to withdraw rewards
+      const rewardAfterFineShouldBeBN = account1DepositBN;
+      await token.transfer(staking.address, rewardAfterFineShouldBeBN.sub(account1DepositBN), {from: account2});
+      const finishedTx = await staking.adminWithdraw(account6, account1, stakeIndex, {from: owner});
+      expectEvent(finishedTx.receipt, 'Withdraw', [account1, rewardAfterFineShouldBeBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const finishedTimestampBN = new BN((await web3.eth.getBlock(finishedTx.receipt.blockNumber)).timestamp);
+      expect(finishedTimestampBN).to.be.bignumber.greaterThan(depositTimestampBN);
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.finished).to.be.bignumber.equal(finishedTimestampBN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN));
+      expect(await token.balanceOf(account6)).to.be.bignumber.equal(rewardAfterFineShouldBeBN);
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(ZERO_BN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+      // try adminWithdraw twice
+      await expectRevert(staking.adminWithdraw(account1, account1, stakeIndex, {from: owner}),
         'Stake already closed.'
       );
       // try withdraw twice

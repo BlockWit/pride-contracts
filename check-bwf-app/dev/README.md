@@ -1,2 +1,2 @@
 Mocha option for testing
---timeout 10000
+--timeout 60000
