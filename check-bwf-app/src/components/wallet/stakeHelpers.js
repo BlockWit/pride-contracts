@@ -3,27 +3,27 @@ import { BigNumber } from 'ethers';
 export const stakePrograms = [
   {
     active: true,
-    periodInDaysBN: 40,
-    apyBN: 5,
+    periodInDaysBN: 30,
+    apyBN: 24,
     finesPeriodsCountBN: 1,
-    fineDaysBSs: [40],
+    fineDaysBSs: [30],
     finesBSs: [100]
   },
   {
     active: true,
-    periodInDaysBN: 180,
-    apyBN: 6,
+    periodInDaysBN: 90,
+    apyBN: 30,
     finesPeriodsCountBN: 3,
     fineDaysBSs: [30, 60, 90],
-    finesBSs: [70, 25, 20]
+    finesBSs: [100, 50, 20]
   },
   {
     active: true,
-    periodInDaysBN: 360,
-    apyBN: 8,
+    periodInDaysBN: 180,
+    apyBN: 36,
     finesPeriodsCountBN: 3,
     fineDaysBSs: [60, 120, 180],
-    finesBSs: [70, 25, 20]
+    finesBSs: [70, 30, 20]
   }
 ];
 
