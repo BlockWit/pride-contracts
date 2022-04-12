@@ -423,6 +423,10 @@ contract StakingProgram is RecoverableFunds {
 
     uint8 public constant WITHDRAW_KIND_BY_PROGRAM = 0;
 
+    address public fineWallet;
+
+    uint public summaryFine;
+
     struct StakeType {
         bool active;
         uint periodInDays;
@@ -463,18 +467,18 @@ contract StakingProgram is RecoverableFunds {
 
     event Withdraw(address account, uint amount, uint stakingTypeIndex, uint stakeIndex);
 
-    function configure(address tokenAddress) public onlyOwner {
+    function configure(address tokenAddress, address inFineWallet) public onlyOwner {
         require(!firstConfigured, "Already configured");
 
         // 1st
         uint[] memory fineDays = new uint[](1);
         uint[] memory fines = new uint[](1);
 
-        fineDays[0] = 40;
+        fineDays[0] = 30;
 
         fines[0] = 100;
 
-        addStakeTypeWithFines(40, 5, fines, fineDays);
+        addStakeTypeWithFines(30, 24, fines, fineDays);
 
         fineDays = new uint[](3);
         fines = new uint[](3);
@@ -484,11 +488,11 @@ contract StakingProgram is RecoverableFunds {
         fineDays[1] = 60;
         fineDays[2] = 90;
 
-        fines[0] = 70;
-        fines[1] = 25;
+        fines[0] = 100;
+        fines[1] = 50;
         fines[2] = 20;
 
-        addStakeTypeWithFines(90, 6, fines, fineDays);
+        addStakeTypeWithFines(90, 30, fines, fineDays);
 
 
         // 3d
@@ -497,11 +501,13 @@ contract StakingProgram is RecoverableFunds {
         fineDays[2] = 180;
 
         fines[0] = 70;
-        fines[1] = 25;
+        fines[1] = 30;
         fines[2] = 20;
 
-        addStakeTypeWithFines(180, 8, fines, fineDays);
+        addStakeTypeWithFines(180, 36, fines, fineDays);
         token = IERC20(tokenAddress);
+
+        fineWallet = inFineWallet;
 
         firstConfigured = true;
     }
@@ -543,6 +549,10 @@ contract StakingProgram is RecoverableFunds {
         stakeType.periodInDays = periodInDays;
         stakeType.apy = apy;
         return countOfStakeTypes - 1;
+    }
+
+    function setFineWallet(address inFineWallet) public onlyOwner {
+        fineWallet = inFineWallet;
     }
 
     function setToken(address tokenAddress) public onlyOwner {
@@ -614,8 +624,14 @@ contract StakingProgram is RecoverableFunds {
         staker.finished[stakeIndex] = block.timestamp;
         staker.closed[stakeIndex] = true;
 
-        require(token.transfer(_msgSender(), staker.amountAfter[stakeIndex]), "Can't transfer reward");
+        require(token.transfer(stakerAddress, staker.amountAfter[stakeIndex]), "Can't transfer reward");
         uint stakeTypeIndex = staker.stakeType[stakeIndex];
+
+        if(staker.amountAfter[stakeIndex] < staker.amount[stakeIndex]) {
+            uint fine = staker.amount[stakeIndex] - staker.amountAfter[stakeIndex];
+            summaryFine += fine;
+            require(token.transfer(fineWallet, fine), "Can't transfer reward");
+        }
 
         emit Withdraw(_msgSender(), staker.amountAfter[stakeIndex], stakeTypeIndex, stakeIndex);
     }
@@ -626,6 +642,10 @@ contract StakingProgram is RecoverableFunds {
 
     function withdraw(uint8 stakeIndex) public {
         commonWithdraw(_msgSender(), stakeIndex, WITHDRAW_KIND_BY_PROGRAM);
+    }
+
+    function withdrawSpecified(address to, uint amount) public onlyOwner {
+        token.transfer(to, amount);
     }
 
     function withdrawAll(address to) public onlyOwner {

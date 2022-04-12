@@ -20,6 +20,10 @@ contract StakingProgram is RecoverableFunds {
 
     uint8 public constant WITHDRAW_KIND_BY_PROGRAM = 0;
 
+    address public fineWallet;
+
+    uint public summaryFine;
+
     struct StakeType {
         bool active;
         uint periodInDays;
@@ -60,7 +64,7 @@ contract StakingProgram is RecoverableFunds {
 
     event Withdraw(address account, uint amount, uint stakingTypeIndex, uint stakeIndex);
 
-    function configure(address tokenAddress) public onlyOwner {
+    function configure(address tokenAddress, address inFineWallet) public onlyOwner {
         require(!firstConfigured, "Already configured");
 
         // 1st
@@ -99,6 +103,8 @@ contract StakingProgram is RecoverableFunds {
 
         addStakeTypeWithFines(180, 36, fines, fineDays);
         token = IERC20(tokenAddress);
+
+        fineWallet = inFineWallet;
 
         firstConfigured = true;
     }
@@ -140,6 +146,10 @@ contract StakingProgram is RecoverableFunds {
         stakeType.periodInDays = periodInDays;
         stakeType.apy = apy;
         return countOfStakeTypes - 1;
+    }
+
+    function setFineWallet(address inFineWallet) public onlyOwner {
+        fineWallet = inFineWallet;
     }
 
     function setToken(address tokenAddress) public onlyOwner {
@@ -211,8 +221,14 @@ contract StakingProgram is RecoverableFunds {
         staker.finished[stakeIndex] = block.timestamp;
         staker.closed[stakeIndex] = true;
 
-        require(token.transfer(_msgSender(), staker.amountAfter[stakeIndex]), "Can't transfer reward");
+        require(token.transfer(stakerAddress, staker.amountAfter[stakeIndex]), "Can't transfer reward");
         uint stakeTypeIndex = staker.stakeType[stakeIndex];
+
+        if(staker.amountAfter[stakeIndex] < staker.amount[stakeIndex]) {
+            uint fine = staker.amount[stakeIndex] - staker.amountAfter[stakeIndex];
+            summaryFine += fine;
+            require(token.transfer(fineWallet, fine), "Can't transfer reward");
+        }
 
         emit Withdraw(_msgSender(), staker.amountAfter[stakeIndex], stakeTypeIndex, stakeIndex);
     }
@@ -223,6 +239,10 @@ contract StakingProgram is RecoverableFunds {
 
     function withdraw(uint8 stakeIndex) public {
         commonWithdraw(_msgSender(), stakeIndex, WITHDRAW_KIND_BY_PROGRAM);
+    }
+
+    function withdrawSpecified(address to, uint amount) public onlyOwner {
+        token.transfer(to, amount);
     }
 
     function withdrawAll(address to) public onlyOwner {
