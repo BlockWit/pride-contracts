@@ -24,8 +24,6 @@ contract StakingProgram is RecoverableFunds {
 
     uint public summaryFine = 0;
 
-    uint public stakersCount = 0;
-
     bool public paused = false;
 
     struct StakeType {
@@ -49,6 +47,8 @@ contract StakingProgram is RecoverableFunds {
         uint summerDeposit;
         uint summerAfter;
     }
+
+    uint public copyCounter = 0;
 
     uint public countOfStakeTypes;
 
@@ -113,6 +113,50 @@ contract StakingProgram is RecoverableFunds {
         firstConfigured = true;
     }
 
+    function copyFromAnotherStakingProgram(address addressFrom, uint count) public onlyOwner {
+        StakingProgram anotherStakingProgram = StakingProgram(addressFrom);
+        uint[] memory uintValues = new uint[](3);
+        uintValues[0] = anotherStakingProgram.stakersAddressesCount();
+        require(uintValues[0] > copyCounter, "Already copied");
+        uintValues[1] = copyCounter + count;
+        uintValues[2] = uintValues[0];
+        if(uintValues[2] > uintValues[1]) {
+            uintValues[2] = uintValues[1];
+        }
+        for(uint i = copyCounter; i < uintValues[2]; i++) {
+            address stakerAddress = anotherStakingProgram.stakersAddresses(i);
+            (bool sourceStakerExists,
+            uint sourceStakerCount,
+            uint sourceStakerSummerDeposit,
+            uint sourceStakerSummerAfter) = anotherStakingProgram.stakers(stakerAddress);
+
+            stakersAddresses.push(stakerAddress);
+            stakersAddressesCount++;
+            Staker storage targetStaker = stakers[stakerAddress];
+
+            targetStaker.exists = sourceStakerExists;
+            targetStaker.count = sourceStakerCount;
+            targetStaker.summerDeposit = sourceStakerSummerDeposit;
+            targetStaker.summerAfter = sourceStakerSummerAfter;
+
+            for(uint j = 0; j < sourceStakerCount; j++) {
+                (bool sourceStakeClosed,
+                uint sourceStakeAmount,
+                uint sourceStakeAmountAfter,
+                uint sourceStakeStakeType,
+                uint sourceStakeStart,
+                uint sourceStakeFinished) = anotherStakingProgram.getStakerStakeParams(stakerAddress, j);
+                targetStaker.closed[j] = sourceStakeClosed;
+                targetStaker.amount[j] = sourceStakeAmount;
+                targetStaker.amountAfter[j] = sourceStakeAmountAfter;
+                targetStaker.stakeType[j] = sourceStakeStakeType;
+                targetStaker.start[j] = sourceStakeStart;
+                targetStaker.finished[j] = sourceStakeFinished;
+            }
+        }
+        copyCounter = uintValues[2];
+    }
+
     function addStakeTypeWithFines(uint periodInDays, uint apy, uint[] memory fines, uint[] memory fineDays) public onlyOwner {
         uint stakeTypeIndex = addStakeType(periodInDays, apy);
         setStakeTypeFines(stakeTypeIndex, fines, fineDays);
@@ -171,7 +215,6 @@ contract StakingProgram is RecoverableFunds {
 
         Staker storage staker = stakers[_msgSender()];
         if (!staker.exists) {
-            stakersCount++;
             staker.exists = true;
             stakersAddresses.push(_msgSender());
             stakersAddressesCount++;

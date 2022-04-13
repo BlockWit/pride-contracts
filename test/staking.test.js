@@ -306,6 +306,11 @@ describe('Staking', async () => {
   });
 
   describe('Check only owner functions throws corresponding excepion', function () {
+    it('copyFromAnotherStakingProgram', async function () {
+      await expectRevert(staking.copyFromAnotherStakingProgram(account4, ONE_BN, {from: account1}),
+        'Ownable: caller is not the owner'
+      );
+    });
     it('setPaused', async function () {
       await expectRevert(staking.setPaused(true, {from: account1}),
         'Ownable: caller is not the owner'
@@ -454,6 +459,48 @@ describe('Staking', async () => {
       expect(stakeParams.stakeType).to.be.bignumber.equal(STAKE_PROGRAM_1_BN);
       expect(stakeParams.start).to.be.bignumber.equal(depositTimestampBN);
       expect(stakeParams.finished).to.be.bignumber.equal(ZERO_BN);
+    });
+  });
+
+  describe('deposits copy', function () {
+    it('copy to new contract', async function () {
+      await staking.configure(token.address, account4, {from: owner});
+      const account1DepositBN = new BN('100123456789000000000');
+      await token.approve(staking.address, account1DepositBN, {from: account1});
+      const depositTx = await staking.deposit(STAKE_PROGRAM_1_BN, account1DepositBN, {from: account1});
+      expectEvent(depositTx.receipt, 'Deposit', [account1, account1DepositBN, STAKE_PROGRAM_1_BN, ZERO_BN]);
+      const stakeIndex = (await staking.stakers(account1)).count.sub(ONE_BN);
+
+      const staker1 = await staking.stakers(account1);
+      expect(staker1.exists).to.be.equal(true);
+      expect(staker1.count).to.be.bignumber.equal(ONE_BN);
+      expect(staker1.summerDeposit).to.be.bignumber.equal(account1DepositBN);
+      const stakeParams = await staking.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParams.amount).to.be.bignumber.equal(account1DepositBN);
+      expect(stakeParams.finished).to.be.bignumber.equal(ZERO_BN);
+      expect(stakeParams.amountAfter).to.be.bignumber.equal(ZERO_BN);
+      expect(staker1.summerAfter).to.be.bignumber.equal(ZERO_BN);
+      expect(await token.balanceOf(account1)).to.be.bignumber.equal(SUPPLY1.sub(account1DepositBN));
+      // check stake contract balance
+      expect(await token.balanceOf(staking.address)).to.be.bignumber.equal(account1DepositBN);
+      // check fine wallet balance
+      expect(await token.balanceOf(account4)).to.be.bignumber.equal(ZERO_BN);
+
+      const stakingNew = await Staking.new({from: owner});
+      await stakingNew.copyFromAnotherStakingProgram(staking.address, new BN(10), {from: owner});
+
+      const stakerNC1 = await stakingNew.stakers(account1);
+      expect(stakerNC1.exists).to.be.equal(staker1.exists);
+      expect(stakerNC1.count).to.be.bignumber.equal(staker1.count);
+      expect(stakerNC1.summerDeposit).to.be.bignumber.equal(staker1.summerDeposit);
+      expect(stakerNC1.summerAfter).to.be.bignumber.equal(staker1.summerAfter);
+      const stakeParamsNC = await stakingNew.getStakerStakeParams(account1, stakeIndex);
+      expect(stakeParamsNC.closed).to.be.equal(stakeParams.closed);
+      expect(stakeParamsNC.amount).to.be.bignumber.equal(stakeParams.amount);
+      expect(stakeParamsNC.amountAfter).to.be.bignumber.equal(stakeParams.amountAfter);
+      expect(stakeParamsNC.stakeType).to.be.bignumber.equal(stakeParams.stakeType);
+      expect(stakeParamsNC.start).to.be.bignumber.equal(stakeParams.start);
+      expect(stakeParamsNC.finished).to.be.bignumber.equal(stakeParams.finished);
     });
   });
 
