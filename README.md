@@ -54,7 +54,8 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 * [Token](https://bscscan.com/address/0x085d15db9c7cd3df188422f88ec41ec573d691b9)
 * [Vesting Wallet](https://bscscan.com/address/0xA8d3eEF1ca4f3eFB7289B19E31885a149B211Bd7)
 * [Token Depositor](https://bscscan.com/address/0xF26e41b7ca8C8dAdc8798D75D85FBD853883234F)
-* [Configurator](https://testnet.bscscan.com/address/0xB5037be25B0D4CC949f9BBFA2BaE62e3FcCca0DD)
+* [Configurator](https://bscscan.com/address/0xB5037be25B0D4CC949f9BBFA2BaE62e3FcCca0DD)
+* [StakingProgram](https://bscscan.com/address/0x723C896e82a6c4A617d4e1eace1Bb43070D8A2f3)
 
 ## Test network configuration (BSC Testnet)
 ### Contracts
