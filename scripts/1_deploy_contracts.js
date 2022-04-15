@@ -3,6 +3,7 @@ const Token = artifacts.require('PrideToken');
 const TokenDepositor = artifacts.require('TokenDepositor');
 const TokenDistributor = artifacts.require('TokenDistributor');
 const Wallet = artifacts.require('VestingWallet');
+const StakingProgram = artifacts.require('StakingProgram');
 const { logger } = require('./util');
 
 async function deploy () {
@@ -23,6 +24,9 @@ async function deploy () {
 
   const distributor = await TokenDistributor.new({ from: deployer });
   log(`TokenDistributor deployed: @address{${distributor.address}}`);
+
+  const staking = await StakingProgram.new({ from: deployer });
+  log(`StakingProgram deployed: @address{${staking.address}}`);
 
 }
 
