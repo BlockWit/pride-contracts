@@ -15,6 +15,7 @@ contract PrideNFT is ERC721, ERC721Enumerable, Pausable, AccessControl {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     Counters.Counter private _tokenIdCounter;
+    string private _tokenBaseURI;
 
     constructor() ERC721("Pride NFT", "PRIDENFT") {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
@@ -22,8 +23,12 @@ contract PrideNFT is ERC721, ERC721Enumerable, Pausable, AccessControl {
         _grantRole(MINTER_ROLE, msg.sender);
     }
 
-    function _baseURI() internal pure override returns (string memory) {
-        return "https://pridemetaverse.io/";
+    function _baseURI() internal view override returns (string memory) {
+        return _tokenBaseURI;
+    }
+
+    function setBaseURI(string calldata uri) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        _tokenBaseURI = uri;
     }
 
     function pause() public onlyRole(PAUSER_ROLE) {
