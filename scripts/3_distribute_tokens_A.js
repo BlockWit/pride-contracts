@@ -29,6 +29,21 @@ async function deploy () {
     const { addresses, balances } = fromCSV('distribution/public_sale_2.csv');
     console.log(JSON.stringify([addresses, balances.map(ether).map(b => b.toString())]))
   }
+  {
+    log(`Distributor. Playpad.`);
+    const { addresses, balances } = fromCSV('distribution/playpad.csv');
+    console.log(JSON.stringify([addresses, balances.map(ether).map(b => b.toString())]))
+  }
+  {
+    log(`Distributor. Seedify Gleam.`);
+    const { addresses, balances } = fromCSV('distribution/seedify_gleam.csv');
+    console.log(JSON.stringify([addresses, balances.map(ether).map(b => b.toString())]))
+  }
+  {
+    log(`Distributor. TruePNL.`);
+    const { addresses, balances } = fromCSV('distribution/true_pnl.csv');
+    console.log(JSON.stringify([addresses, balances.map(ether).map(b => b.toString())]))
+  }
 }
 
 module.exports = async function main (callback) {
