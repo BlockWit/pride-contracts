@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Button, Container, Grid, makeStyles, TextField, Typography } from '@material-ui/core';
 import { useWeb3 } from '../../wallet/walletUtils';
 import { approve } from '../../wallet/erc20Contract';
-import { deposit, STAKING_ADDRESS } from '../../wallet/stakeContract';
+import {deposit, stakerAllStakingAmount, STAKING_ADDRESS} from '../../wallet/stakeContract';
 import Loading from '../../common/Loading/Loading';
 import ShrinkAddressTx from '../../common/ShrinkAddress/ShrinkAddressTx';
 import { Navigate, useLocation } from 'react-router-dom';

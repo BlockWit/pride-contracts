@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
-import { makeStyles, Typography } from '@material-ui/core';
-import { useWallet } from 'use-wallet';
+import React, {useEffect, useState} from 'react';
+import {makeStyles, Typography} from '@material-ui/core';
+import {useWallet} from 'use-wallet';
 import Loading from '../../common/Loading/Loading';
-import { allStakerInfo, countOfStakeTypes } from '../../wallet/stakeContract';
-import { getWeb3FromWallet } from '../../wallet/walletUtils';
+import {allStakerInfo, countOfStakeTypes, stakerAllStakingAmount} from '../../wallet/stakeContract';
+import {getWeb3FromWallet} from '../../wallet/walletUtils';
 import DataListView from '../../DataListView/DataListView';
 import CanWithdraw from './CanWithdraw/CanWithdraw';
-import { formatEther } from 'ethers/lib/utils';
-import { calculateDepositWithFineOrReward } from '../../wallet/stakeHelpers';
+import {formatEther} from 'ethers/lib/utils';
+import {calculateDepositWithFineOrReward} from '../../wallet/stakeHelpers';
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -50,7 +50,7 @@ const WithdrawPage = () => {
               justifyContent: "flex-end"
             },
             customWrapper: (value) => {
-              if(value == '')
+              if (value == '')
                 return 0;
               return parseInt(value);
             }
@@ -137,7 +137,7 @@ const WithdrawPage = () => {
 
       const items = state.stakerInfo;
       const reversedItems = [];
-      for(let i = items.length - 1; i >= 0; i--) {
+      for (let i = items.length - 1; i >= 0; i--) {
         reversedItems.push(items[i]);
       }
       return <DataListView items={reversedItems} options={options}/>;
@@ -158,11 +158,19 @@ const WithdrawPage = () => {
               action: 'action'
             };
           });
-        })
-        .then(stakerInfo => {
+        }).then(stakerInfo =>
+          stakerAllStakingAmount(web3Provider, account).then(amountSum => {
+            return {
+              stakerInfo: stakerInfo,
+              sumAmount: amountSum
+            }
+          })
+        ).then(stakerInfo => {
+          console.log("Sum amount : ", stakerInfo.sumAmount.toString());
           setState({
             ...state,
-            stakerInfo: stakerInfo,
+            stakerInfo: stakerInfo.stakerInfo,
+            sumAmount: stakerInfo.sumAmount.toString(),
             loadingStakerInfo: false,
             loadedStakerInfo: true
           });

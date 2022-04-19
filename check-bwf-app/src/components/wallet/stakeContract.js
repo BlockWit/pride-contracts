@@ -1,5 +1,5 @@
-import { ethers } from 'ethers';
-import { parseEther } from 'ethers/lib/utils';
+import {BigNumber, ethers} from 'ethers';
+import {parseEther} from 'ethers/lib/utils';
 
 const STAKING_ABI = [
   'function stakers(address stakerAddress) public view returns (uint256 extsts, uint256 count, uint256 summerDeposit, uint256 summerAfter)',
@@ -16,7 +16,7 @@ const stakeContractFromProvider = (web3provider) => {
   return new ethers.Contract(STAKING_ADDRESS, STAKING_ABI, web3provider);
 };
 
-export async function withdraw (web3Provider, stakeIndex) {
+export async function withdraw(web3Provider, stakeIndex) {
   const stakingContract = stakeContractFromProvider(web3Provider);
   const signer = web3Provider.getSigner();
   const contractWithSigner = stakingContract.connect(signer);
@@ -24,29 +24,29 @@ export async function withdraw (web3Provider, stakeIndex) {
   return await contractWithSigner.withdraw(stakeIndex);
 }
 
-export async function deposit (web3Provider, stakeProgramIndex, amount) {
+export async function deposit(web3Provider, stakeProgramIndex, amount) {
   const stakingContract = stakeContractFromProvider(web3Provider);
   const signer = web3Provider.getSigner();
   const contractWithSigner = stakingContract.connect(signer);
   return await contractWithSigner.deposit(stakeProgramIndex, parseEther(amount));
 }
 
-export async function countOfStakeTypes (web3Provider) {
+export async function countOfStakeTypes(web3Provider) {
   const stakingContract = stakeContractFromProvider(web3Provider);
   return await stakingContract.countOfStakeTypes();
 }
 
-export async function stakers (web3Provider, stakerAddress) {
+export async function stakers(web3Provider, stakerAddress) {
   const stakingContract = stakeContractFromProvider(web3Provider);
   return await stakingContract.stakers(stakerAddress);
 }
 
-export async function getStakerStakeParams (web3Provider, stakerAddress, stakeIndex) {
+export async function getStakerStakeParams(web3Provider, stakerAddress, stakeIndex) {
   const stakingContract = stakeContractFromProvider(web3Provider);
   return await stakingContract.getStakerStakeParams(stakerAddress, stakeIndex);
 }
 
-export async function allStakerInfo (web3Provider, stakerAddress) {
+export async function allStakerInfo(web3Provider, stakerAddress) {
   return await stakers(web3Provider, stakerAddress).then(staker => {
     const countOfStakes = staker.count.toNumber();
     const arrayOfStakes = [...Array(countOfStakes).keys()];
@@ -56,4 +56,21 @@ export async function allStakerInfo (web3Provider, stakerAddress) {
   });
 }
 
+export async function stakerAllStakingAmount(web3Provider, stakerAddress) {
+  return await stakers(web3Provider, stakerAddress).then(staker => {
+    const countOfStakes = staker.count.toNumber();
+    const arrayOfStakes = [...Array(countOfStakes).keys()];
+    return Promise.all(arrayOfStakes.map(stakeIndex => {
+      return getStakerStakeParams(web3Provider, stakerAddress, stakeIndex);
+    })).then(stakes => {
+      let summerAmount = BigNumber.from(0);
+      for (let i = 0; i < stakes.length; i++) {
+        if (!stakes[i].closed) {
+          summerAmount = summerAmount.add(stakes[i].amount);
+        }
+      }
+      return summerAmount;
+    });
+  });
+}
 
