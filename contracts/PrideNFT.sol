@@ -39,10 +39,11 @@ contract PrideNFT is ERC721, ERC721Enumerable, Pausable, AccessControl {
         _unpause();
     }
 
-    function safeMint(address to) public onlyRole(MINTER_ROLE) {
+    function safeMint(address to) public onlyRole(MINTER_ROLE) returns (uint256) {
         uint256 tokenId = _tokenIdCounter.current();
         _tokenIdCounter.increment();
         _safeMint(to, tokenId);
+        return tokenId;
     }
 
     function _beforeTokenTransfer(address from, address to, uint256 tokenId) internal whenNotPaused override(ERC721, ERC721Enumerable) {
