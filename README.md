@@ -19,6 +19,9 @@ Pride smart-contract
 2. _VestingWallet_ - Wallet contract
 3. _TokenDepositor_ - Helper contract for batch token distribution
 4. _Configurator_ - Smart contract for initial configuration
+5. _PrideNFT_ - NFT token contract
+6. _NFTMinter_ - Helper contract for batch NFT minting
+7. _NFTMarket_ - Smart contract for the initial sale of NFT tokens
 
 ### How to work with this project
 #### To start working with the contracts, please, follow theese steps for each contract:
@@ -61,6 +64,9 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 ### Contracts
 * [Token](https://testnet.bscscan.com/token/0x0D8E7c62f192725d14559cC1DfDD884F9e8BA7Fb)
 * [VestingWallet](https://testnet.bscscan.com/address/0xed3956e63bC7d848950BcC6B2B1c7957d5BBE7a4)
+* [NFT](https://testnet.bscscan.com/token/0x363189488bcd7b928de7f954a131637fac0fe4b0)
+* [NFTMinter](https://testnet.bscscan.com/address/0xFb1FdF05C5B6D8cECF735B17d8FF0FB88ab92C36)
+* [NFTMarket](https://testnet.bscscan.com/address/0x6F0f66438a11593D9Fa1dd370a39143B1A9ec2CD)
 
 You can find test log [here](docs/testnet.log.md)
 
