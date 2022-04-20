@@ -33,7 +33,7 @@ contract NFTMarket is Pausable, RecoverableFunds {
         minter = newMinterAddress;
     }
 
-    function setToken(address newTokenAddress) external onlyOwner {
+    function setTokenAddress(address newTokenAddress) external onlyOwner {
         token = IPrideNFT(newTokenAddress);
     }
 
@@ -49,15 +49,22 @@ contract NFTMarket is Pausable, RecoverableFunds {
         return items.length();
     }
 
-    function addItemToMarket(uint256 tokenId, uint256 price) external onlyOwner {
+    function addItemToMarket(uint256 tokenId, uint256 price) external {
+        require(minter == _msgSender() || owner() == _msgSender(), "NFTMarket: Only owner or minter can use this method");
         require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
-        require(price > 0, "NFTMarket: Price must be greater than 0");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price));
     }
 
-    function updateMarketItem(uint256 tokenId, uint256 price) external onlyOwner {
+    function updateMarketItem(uint256 tokenId, uint256 price) external {
+        require(minter == _msgSender() || owner() == _msgSender(), "NFTMarket: Only owner or minter can use this method");
         require(items.contains(tokenId), "NFTMarket: Item not found");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price));
+    }
+
+    function removeMarketItem(uint256 tokenId) external {
+        require(minter == _msgSender() || owner() == _msgSender(), "NFTMarket: Only owner or minter can use this method");
+        require(items.contains(tokenId), "NFTMarket: Item not found");
+        items.remove(tokenId);
     }
 
     function buy(uint256 tokenId) external payable whenNotPaused {
