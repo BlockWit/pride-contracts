@@ -8,9 +8,16 @@ library MarketItems {
 
     using EnumerableSet for EnumerableSet.UintSet;
 
+    enum Currency {
+        PRIDE,
+        ERC20,
+        NATIVE
+    }
+
     struct MarketItem {
         uint256 tokenId;
         uint256 price;
+        Currency currency;
     }
 
     struct Map {

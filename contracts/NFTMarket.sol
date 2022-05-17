@@ -17,7 +17,9 @@ contract NFTMarket is Pausable, AccessControl {
     using MarketItems for MarketItems.Map;
 
     MarketItems.Map private items;
-    address public token;
+    address public nft;
+    address public pride;
+    address public erc20;
     address public manager;
     address public holder;
     address payable public fundraisingWallet;
@@ -40,8 +42,16 @@ contract NFTMarket is Pausable, AccessControl {
         fundraisingWallet = newFundraisingWalletAddress;
     }
 
-    function setToken(address newTokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        token = newTokenAddress;
+    function setNFT(address newNFTAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        nft = newNFTAddress;
+    }
+
+    function setPride(address newPrideAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        pride = newPrideAddress;
+    }
+
+    function setERC20(address newERC20Address) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        erc20 = newERC20Address;
     }
 
     function setManager(address newManagerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -72,14 +82,14 @@ contract NFTMarket is Pausable, AccessControl {
         return items.length();
     }
 
-    function addMarketItem(uint256 tokenId, uint256 price) external onlyRole(MANAGER_ROLE) {
+    function addMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
         require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
-        items.set(tokenId, MarketItems.MarketItem(tokenId, price));
+        items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
     }
 
-    function updateMarketItem(uint256 tokenId, uint256 price) external onlyRole(MANAGER_ROLE) {
+    function updateMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
         require(items.contains(tokenId), "NFTMarket: Item not found");
-        items.set(tokenId, MarketItems.MarketItem(tokenId, price));
+        items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
     }
 
     function removeMarketItem(uint256 tokenId) external onlyRole(MANAGER_ROLE) {
@@ -97,14 +107,30 @@ contract NFTMarket is Pausable, AccessControl {
 
     function buy(uint256 tokenId) external payable whenNotPaused {
         MarketItems.MarketItem memory item = items.get(tokenId);
+        require(item.currency == MarketItems.Currency.NATIVE, "NFTMakret: This item is not available for sale in native currency");
         require(msg.value >= item.price, "NFTMarket: Not enough funds");
         fundraisingWallet.transfer(item.price);
         items.remove(tokenId);
-        IERC721(token).transferFrom(holder, msg.sender, tokenId);
+        IERC721(nft).transferFrom(holder, msg.sender, tokenId);
         uint256 change = msg.value - item.price;
         if (change > 0) {
             payable(msg.sender).transfer(change);
         }
+    }
+
+    function buy(uint256 tokenId, MarketItems.Currency currency) external whenNotPaused {
+        MarketItems.MarketItem memory item = items.get(tokenId);
+        require(item.currency != MarketItems.Currency.NATIVE, "NFTMakret: You can't use this method to purchase tokens with native currency");
+        require(item.currency == currency, "NFTMakret: This item is not available for sale in the specified currency");
+        IERC20 token;
+        if (currency == MarketItems.Currency.PRIDE) {
+            token = IERC20(pride);
+        } else if (currency == MarketItems.Currency.ERC20) {
+            token = IERC20(erc20);
+        }
+        token.transferFrom(msg.sender, fundraisingWallet, item.price);
+        items.remove(tokenId);
+        IERC721(nft).transferFrom(holder, msg.sender, tokenId);
     }
 
 }
