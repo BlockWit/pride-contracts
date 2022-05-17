@@ -5,8 +5,8 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-import "./interfaces/IPrideNFT.sol";
 import "./lib/MarketItems.sol";
 
 contract NFTMarket is Pausable, AccessControl {
@@ -96,7 +96,7 @@ contract NFTMarket is Pausable, AccessControl {
         require(msg.value >= item.price, "NFTMarket: Not enough funds");
         fundraisingWallet.transfer(item.price);
         items.remove(tokenId);
-        IPrideNFT(token).transferFrom(holder, msg.sender, tokenId);
+        IERC721(token).transferFrom(holder, msg.sender, tokenId);
         uint256 change = msg.value - item.price;
         if (change > 0) {
             payable(msg.sender).transfer(change);
