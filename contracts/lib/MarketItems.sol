@@ -82,4 +82,11 @@ library MarketItems {
         return value;
     }
 
+    /**
+     * @dev eturn the entire set of keys in an array
+     */
+    function keys(Map storage map) internal view returns (uint256[] memory) {
+        return map._keys.values();
+    }
+
 }

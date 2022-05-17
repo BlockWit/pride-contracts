@@ -64,6 +64,10 @@ contract NFTMarket is Pausable, AccessControl {
         return items.at(position);
     }
 
+    function getMarketItemIds() external view returns (uint256[] memory) {
+        return items.keys();
+    }
+
     function getMarketItemsLength() external view returns (uint256) {
         return items.length();
     }
