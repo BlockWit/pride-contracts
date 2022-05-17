@@ -1,6 +1,7 @@
 const NFT = artifacts.require('PrideNFT');
 const NFTMarket = artifacts.require('NFTMarket');
 const NFTMinter = artifacts.require('NFTMinter');
+const NFTHolder = artifacts.require('NFTHolder');
 const { logger } = require('../util');
 
 async function deploy () {
@@ -11,10 +12,12 @@ async function deploy () {
   const NFT_ADDRESS = args[args.findIndex(argName => argName === '--nft') + 1];
   const MARKET_ADDRESS = args[args.findIndex(argName => argName === '--market') + 1];
   const MINTER_ADDRESS = args[args.findIndex(argName => argName === '--minter') + 1];
+  const HOLDER_ADDRESS = args[args.findIndex(argName => argName === '--holder') + 1];
 
   const nft = await NFT.at(NFT_ADDRESS);
   const market = await NFTMarket.at(MARKET_ADDRESS);
   const minter = await NFTMinter.at(MINTER_ADDRESS);
+  const holder = await NFTHolder.at(HOLDER_ADDRESS);
 
   {
     log(`NFT. Set base URI.`);
@@ -35,20 +38,44 @@ async function deploy () {
   }
 
   {
-    log(`Market. Set token address.`);
-    const tx = await market.setTokenAddress(NFT_ADDRESS, {from: deployer});
+    log(`Minter. Set holder address.`);
+    const tx = await minter.setHolder(HOLDER_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
   {
-    log(`Market. Set minter address.`);
-    const tx = await market.setMinterAddress(MINTER_ADDRESS, {from: deployer});
+    log(`Market. Set token address.`);
+    const tx = await market.setNFT(NFT_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Market. Set manager address.`);
+    const tx = await market.setManager(MINTER_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Market. Set holder address.`);
+    const tx = await market.setHolder(HOLDER_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
   {
     log(`Market. Set fundraising wallet.`);
     const tx = await market.setFundraisingWallet(deployer, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Holder. Set token address.`);
+    const tx = await market.setToken(NFT_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Holder. Set approval for market.`);
+    const tx = await market.setApproval(MARKET_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 

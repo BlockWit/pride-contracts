@@ -1,6 +1,7 @@
 const NFT = artifacts.require('PrideNFT');
 const NFTMarket = artifacts.require('NFTMarket');
 const NFTMinter = artifacts.require('NFTMinter');
+const NFTHolder = artifacts.require('NFTHolder');
 const { logger } = require('../util');
 
 async function deploy () {
@@ -15,6 +16,9 @@ async function deploy () {
 
   const minter = await NFTMinter.new({ from: deployer });
   log(`Minter deployed: @address{${minter.address}}`);
+
+  const holder = await NFTHolder.new({ from: deployer });
+  log(`Holder deployed: @address{${holder.address}}`);
 
 }
 
