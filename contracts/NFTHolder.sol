@@ -25,7 +25,7 @@ contract NFTHolder is ERC721Holder, AccessControl {
     }
 
     function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        IERC20(tokenAddress).transfer(recipient, token.balanceOf(address(this)));
+        IERC20(tokenAddress).transfer(recipient, IERC20(tokenAddress).balanceOf(address(this)));
     }
 
     function retriveETH(address payable recipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
