@@ -12,20 +12,20 @@ import "./lib/MarketItems.sol";
 contract NFTMarket is Pausable, AccessControl {
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
-    bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
+    bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
     using MarketItems for MarketItems.Map;
 
     IPrideNFT public token;
     MarketItems.Map private items;
-    address public minter;
+    address public manager;
     address public holder;
     address payable public fundraisingWallet;
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
         _grantRole(PAUSER_ROLE, msg.sender);
-        _grantRole(MINTER_ROLE, msg.sender);
+        _grantRole(MANAGER_ROLE, msg.sender);
     }
 
     function pause() external onlyRole(PAUSER_ROLE) {
@@ -40,12 +40,12 @@ contract NFTMarket is Pausable, AccessControl {
         fundraisingWallet = newFundraisingWalletAddress;
     }
 
-    function setMinter(address newMinterAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        if (hasRole(MINTER_ROLE, minter)) {
-            _revokeRole(MINTER_ROLE, minter);
+    function setManager(address newManagerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        if (hasRole(MANAGER_ROLE, manager)) {
+            _revokeRole(MANAGER_ROLE, manager);
         }
-        minter = newMinterAddress;
-        _grantRole(MINTER_ROLE, newMinterAddress);
+        manager = newManagerAddress;
+        _grantRole(MANAGER_ROLE, newManagerAddress);
     }
 
     function setToken(address newTokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -68,17 +68,17 @@ contract NFTMarket is Pausable, AccessControl {
         return items.length();
     }
 
-    function addMarketItem(uint256 tokenId, uint256 price) external onlyRole(MINTER_ROLE) {
+    function addMarketItem(uint256 tokenId, uint256 price) external onlyRole(MANAGER_ROLE) {
         require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price));
     }
 
-    function updateMarketItem(uint256 tokenId, uint256 price) external onlyRole(MINTER_ROLE) {
+    function updateMarketItem(uint256 tokenId, uint256 price) external onlyRole(MANAGER_ROLE) {
         require(items.contains(tokenId), "NFTMarket: Item not found");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price));
     }
 
-    function removeMarketItem(uint256 tokenId) external onlyRole(MINTER_ROLE) {
+    function removeMarketItem(uint256 tokenId) external onlyRole(MANAGER_ROLE) {
         require(items.contains(tokenId), "NFTMarket: Item not found");
         items.remove(tokenId);
     }
