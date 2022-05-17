@@ -105,14 +105,18 @@ contract NFTMarket is Pausable, AccessControl {
         recipient.transfer(address(this).balance);
     }
 
-    function buy(uint256 tokenId) external payable whenNotPaused {
-        MarketItems.MarketItem memory item = items.get(tokenId);
-        require(item.currency == MarketItems.Currency.NATIVE, "NFTMakret: This item is not available for sale in native currency");
-        require(msg.value >= item.price, "NFTMarket: Not enough funds");
-        fundraisingWallet.transfer(item.price);
-        items.remove(tokenId);
-        IERC721(nft).transferFrom(holder, msg.sender, tokenId);
-        uint256 change = msg.value - item.price;
+    function buy(uint256[] calldata tokenIds) external payable whenNotPaused {
+        uint256 totalAmount;
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            MarketItems.MarketItem memory item = items.get(tokenIds[i]);
+            require(item.currency == MarketItems.Currency.NATIVE, "NFTMakret: Item is not available for sale in native currency");
+            totalAmount += item.price;
+            items.remove(item.tokenId);
+            IERC721(nft).transferFrom(holder, msg.sender, item.tokenId);
+        }
+        require(msg.value >= totalAmount, "NFTMarket: Not enough funds");
+        fundraisingWallet.transfer(totalAmount);
+        uint256 change = msg.value - totalAmount;
         if (change > 0) {
             payable(msg.sender).transfer(change);
         }
