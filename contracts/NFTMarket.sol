@@ -122,19 +122,27 @@ contract NFTMarket is Pausable, AccessControl {
         }
     }
 
-    function buy(uint256 tokenId, MarketItems.Currency currency) external whenNotPaused {
-        MarketItems.MarketItem memory item = items.get(tokenId);
-        require(item.currency != MarketItems.Currency.NATIVE, "NFTMakret: You can't use this method to purchase tokens with native currency");
-        require(item.currency == currency, "NFTMakret: This item is not available for sale in the specified currency");
-        IERC20 token;
-        if (currency == MarketItems.Currency.PRIDE) {
-            token = IERC20(pride);
-        } else if (currency == MarketItems.Currency.ERC20) {
-            token = IERC20(erc20);
+    function buyForERC20(uint256[] calldata tokenIds) external whenNotPaused {
+        uint256 totalAmountPRIDE;
+        uint256 totalAmountERC20;
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            MarketItems.MarketItem memory item = items.get(tokenIds[i]);
+            if (item.currency == MarketItems.Currency.PRIDE) {
+                totalAmountPRIDE += item.price;
+            } else if (item.currency == MarketItems.Currency.ERC20) {
+                totalAmountERC20 += item.price;
+            } else {
+                revert("NFTMakret: This item is not available for sale in the specified currency");
+            }
+            items.remove(item.tokenId);
+            IERC721(nft).transferFrom(holder, msg.sender, item.tokenId);
         }
-        token.transferFrom(msg.sender, fundraisingWallet, item.price);
-        items.remove(tokenId);
-        IERC721(nft).transferFrom(holder, msg.sender, tokenId);
+        if (totalAmountPRIDE > 0) {
+            IERC20(pride).transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);
+        }
+        if (totalAmountERC20 > 0) {
+            IERC20(erc20).transferFrom(msg.sender, fundraisingWallet, totalAmountERC20);
+        }
     }
 
 }
