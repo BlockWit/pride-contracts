@@ -19,6 +19,7 @@ contract NFTMarket is Pausable, AccessControl {
     IPrideNFT public token;
     MarketItems.Map private items;
     address public minter;
+    address public holder;
     address payable public fundraisingWallet;
 
     constructor() {
@@ -49,6 +50,10 @@ contract NFTMarket is Pausable, AccessControl {
 
     function setToken(address newTokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
         token = IPrideNFT(newTokenAddress);
+    }
+
+    function setHolder(address newHolderAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        holder = newHolderAddress;
     }
 
     function getMarketItemByTokenId(uint256 tokenId) external view returns (MarketItems.MarketItem memory) {
@@ -92,7 +97,7 @@ contract NFTMarket is Pausable, AccessControl {
         require(msg.value >= item.price, "NFTMarket: Not enough funds");
         fundraisingWallet.transfer(item.price);
         items.remove(tokenId);
-        token.transferFrom(minter, msg.sender, tokenId);
+        token.transferFrom(holder, msg.sender, tokenId);
         uint256 change = msg.value - item.price;
         if (change > 0) {
             payable(msg.sender).transfer(change);
