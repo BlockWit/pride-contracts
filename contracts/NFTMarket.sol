@@ -68,7 +68,7 @@ contract NFTMarket is Pausable, AccessControl {
         return items.length();
     }
 
-    function addItemToMarket(uint256 tokenId, uint256 price) external onlyRole(MINTER_ROLE) {
+    function addMarketItem(uint256 tokenId, uint256 price) external onlyRole(MINTER_ROLE) {
         require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price));
     }

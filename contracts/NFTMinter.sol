@@ -36,7 +36,7 @@ contract NFTMinter is AccessControl {
     function mintAndAddToMarket(uint256[] calldata prices) external onlyRole(MINTER_ROLE) {
         for (uint256 i = 0; i < prices.length; i++) {
             uint256 tokenId = token.safeMint(holder);
-            market.addItemToMarket(tokenId, prices[i]);
+            market.addMarketItem(tokenId, prices[i]);
         }
     }
 

@@ -8,6 +8,6 @@ pragma solidity ^0.8.0;
  */
 interface INFTMarket {
 
-    function addItemToMarket(uint256 tokenId, uint256 price) external;
+    function addMarketItem(uint256 tokenId, uint256 price) external;
 
 }
