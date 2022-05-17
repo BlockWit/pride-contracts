@@ -83,9 +83,8 @@ contract NFTMarket is Pausable, AccessControl {
         items.remove(tokenId);
     }
 
-    function retrieveTokens(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        IERC20 token = IERC20(tokenAddress);
-        token.transfer(recipient, token.balanceOf(address(this)));
+    function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        IERC20(tokenAddress).transfer(recipient, token.balanceOf(address(this)));
     }
 
     function retriveETH(address payable recipient) external onlyRole(DEFAULT_ADMIN_ROLE) {
