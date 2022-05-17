@@ -4,24 +4,23 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@openzeppelin/contracts/token/ERC721/utils/ERC721Holder.sol";
-
-import "./interfaces/IPrideNFT.sol";
 
 contract NFTHolder is ERC721Holder, AccessControl {
 
-    IPrideNFT public token;
+    address public token;
 
     constructor() {
         _grantRole(DEFAULT_ADMIN_ROLE, msg.sender);
     }
 
     function setToken(address newTokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        token = IPrideNFT(newTokenAddress);
+        token = newTokenAddress;
     }
 
     function setApproval(address operator, bool approved) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        token.setApprovalForAll(operator, approved);
+        IERC721(token).setApprovalForAll(operator, approved);
     }
 
     function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
