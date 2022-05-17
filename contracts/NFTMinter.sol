@@ -12,8 +12,8 @@ contract NFTMinter is AccessControl {
 
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
-    IPrideNFT public token;
-    INFTMarket public market;
+    address public market;
+    address public token;
     address public holder;
 
     constructor() {
@@ -22,11 +22,11 @@ contract NFTMinter is AccessControl {
     }
 
     function setToken(address newTokenAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        token = IPrideNFT(newTokenAddress);
+        token = newTokenAddress;
     }
 
     function setMarket(address newMarketAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
-        market = INFTMarket(newMarketAddress);
+        market = newMarketAddress;
     }
 
     function setHolder(address newHolderAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -34,9 +34,11 @@ contract NFTMinter is AccessControl {
     }
 
     function mintAndAddToMarket(uint256[] calldata prices) external onlyRole(MINTER_ROLE) {
+        IPrideNFT _token = IPrideNFT(token);
+        INFTMarket _market = INFTMarket(market);
         for (uint256 i = 0; i < prices.length; i++) {
-            uint256 tokenId = token.safeMint(holder);
-            market.addMarketItem(tokenId, prices[i]);
+            uint256 tokenId = _token.safeMint(holder);
+            _market.addMarketItem(tokenId, prices[i]);
         }
     }
 
