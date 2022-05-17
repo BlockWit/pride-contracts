@@ -3,10 +3,10 @@
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721Receiver.sol";
 
 import "./interfaces/IPrideNFT.sol";
-import "./RecoverableFunds.sol";
 import "./interfaces/INFTMarket.sol";
 
 contract NFTMinter is IERC721Receiver, AccessControl {
