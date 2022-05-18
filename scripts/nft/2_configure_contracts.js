@@ -9,6 +9,7 @@ async function deploy () {
   const [deployer] = await web3.eth.getAccounts();
 
   const args = process.argv.slice(2);
+  const TOKEN_ADDRESS = args[args.findIndex(argName => argName === '--token') + 1];
   const NFT_ADDRESS = args[args.findIndex(argName => argName === '--nft') + 1];
   const MARKET_ADDRESS = args[args.findIndex(argName => argName === '--market') + 1];
   const MINTER_ADDRESS = args[args.findIndex(argName => argName === '--minter') + 1];
@@ -44,7 +45,7 @@ async function deploy () {
   }
 
   {
-    log(`Market. Set token address.`);
+    log(`Market. Set NFT address.`);
     const tx = await market.setNFT(NFT_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
@@ -68,14 +69,20 @@ async function deploy () {
   }
 
   {
-    log(`Holder. Set token address.`);
-    const tx = await market.setToken(NFT_ADDRESS, {from: deployer});
+    log(`Market. Set PRIDE address.`);
+    const tx = await market.setPride(NFT_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Holder. Set PRIDE address.`);
+    const tx = await holder.setToken(NFT_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
   {
     log(`Holder. Set approval for market.`);
-    const tx = await market.setApproval(MARKET_ADDRESS, {from: deployer});
+    const tx = await holder.setApproval(MARKET_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
