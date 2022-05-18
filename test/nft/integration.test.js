@@ -64,13 +64,13 @@ describe('NFT', async () => {
 
     it('should sell tokens for PRIDE', async () => {
       await pride.approve(market.address, ether('123'), { from: buyer });
-      await market.buyForERC20([0], { from: buyer });
+      await market.buy([0], { from: buyer });
       expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
     });
 
     it('should sell tokens for ERC20', async () => {
       await erc20mock.approve(market.address, ether('345'), { from: buyer });
-      await market.buyForERC20([1], { from: buyer });
+      await market.buy([1], { from: buyer });
       expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
     });
 
