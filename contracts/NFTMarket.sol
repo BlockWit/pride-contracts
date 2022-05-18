@@ -11,6 +11,11 @@ import "./lib/MarketItems.sol";
 
 contract NFTMarket is Pausable, AccessControl {
 
+    event MarketItemCreated (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency);
+    event MarketItemUpdated (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency);
+    event MarketItemRemoved (uint256 indexed tokenId);
+    event MarketItemSold (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency, address buyer);
+
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
@@ -85,16 +90,19 @@ contract NFTMarket is Pausable, AccessControl {
     function addMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
         require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
+        emit MarketItemCreated(tokenId, price, currency);
     }
 
     function updateMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
         require(items.contains(tokenId), "NFTMarket: Item not found");
         items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
+        emit MarketItemUpdated(tokenId, price, currency);
     }
 
     function removeMarketItem(uint256 tokenId) external onlyRole(MANAGER_ROLE) {
         require(items.contains(tokenId), "NFTMarket: Item not found");
         items.remove(tokenId);
+        emit MarketItemRemoved(tokenId);
     }
 
     function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -122,6 +130,7 @@ contract NFTMarket is Pausable, AccessControl {
             }
             items.remove(item.tokenId);
             IERC721(nft).transferFrom(holder, msg.sender, item.tokenId);
+            emit MarketItemSold(item.tokenId, item.price, item.currency, msg.sender);
         }
         if (totalAmountPRIDE > 0) {
             IERC20(pride).transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);
