@@ -27,7 +27,7 @@ async function deploy () {
   }
 
   {
-    log(`Minter. Set token address.`);
+    log(`Minter. Set NFT address.`);
     const tx = await minter.setToken(NFT_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
@@ -51,6 +51,12 @@ async function deploy () {
   }
 
   {
+    log(`Market. Set PRIDE address.`);
+    const tx = await market.setPride(TOKEN_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
     log(`Market. Set manager address.`);
     const tx = await market.setManager(MINTER_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
@@ -69,13 +75,7 @@ async function deploy () {
   }
 
   {
-    log(`Market. Set PRIDE address.`);
-    const tx = await market.setPride(NFT_ADDRESS, {from: deployer});
-    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
-  }
-
-  {
-    log(`Holder. Set PRIDE address.`);
+    log(`Holder. Set NFT address.`);
     const tx = await holder.setToken(NFT_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
@@ -87,7 +87,7 @@ async function deploy () {
   }
 
   {
-    log(`Token. Grant minter role to Minter.`);
+    log(`Token. Grant minter role to NFTMinter.`);
     const tx = await nft.grantRole(web3.utils.keccak256("MINTER_ROLE"), MINTER_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
