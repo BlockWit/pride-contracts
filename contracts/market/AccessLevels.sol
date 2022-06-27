@@ -4,26 +4,21 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/utils/structs/EnumerableSet.sol";
 
-library MarketItems {
+library AccessLevels {
 
     using EnumerableSet for EnumerableSet.UintSet;
 
-    enum Currency {
-        PRIDE,
-        ERC20,
-        NATIVE
-    }
-
-    struct MarketItem {
-        uint256 tokenId;
-        uint256 price;
-        Currency currency;
+    struct AccessLevel {
+        uint256 start;
+        uint256 end;
     }
 
     struct Map {
         EnumerableSet.UintSet _keys;
-        mapping(uint256 => MarketItem) _values;
+        mapping(uint256 => AccessLevel) _values;
     }
+
+
 
     /**
      * @dev Adds a key-value pair to a map, or updates the value for an existing
@@ -32,7 +27,7 @@ library MarketItems {
      * Returns true if the key was added to the map, that is if it was not
      * already present.
      */
-    function set(Map storage map, uint256 key, MarketItem memory value) internal returns (bool) {
+    function set(Map storage map, uint256 key, AccessLevel memory value) internal returns (bool) {
         map._values[key] = value;
         return map._keys.add(key);
     }
@@ -71,7 +66,7 @@ library MarketItems {
      *
      * - `index` must be strictly less than {length}.
      */
-    function at(Map storage map, uint256 index) internal view returns (uint256, MarketItem storage) {
+    function at(Map storage map, uint256 index) internal view returns (uint256, AccessLevel storage) {
         uint256 key = map._keys.at(index);
         return (key, map._values[key]);
     }
@@ -83,9 +78,9 @@ library MarketItems {
      *
      * - `key` must be in the map.
      */
-    function get(Map storage map, uint256 key) internal view returns (MarketItem storage) {
-        MarketItem storage value = map._values[key];
-        require(contains(map, key), "MarketItems.Map: nonexistent key");
+    function get(Map storage map, uint256 key) internal view returns (AccessLevel storage) {
+        AccessLevel storage value = map._values[key];
+        require(contains(map, key), "AccessLevels.Map: nonexistent key");
         return value;
     }
 

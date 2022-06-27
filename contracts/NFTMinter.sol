@@ -4,10 +4,9 @@ pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
 import "./interfaces/IPrideNFT.sol";
 import "./interfaces/INFTMarket.sol";
-import "./lib/MarketItems.sol";
+
 
 contract NFTMinter is AccessControl {
 
@@ -34,13 +33,14 @@ contract NFTMinter is AccessControl {
         holder = newHolderAddress;
     }
 
-    function mintAndAddToMarket(uint256[] calldata prices, MarketItems.Currency[] calldata currencies) external onlyRole(MINTER_ROLE) {
+    function mintAndAddToMarket(uint256[] calldata prices, uint256[] calldata pricingStrategies, INFTMarket.Currency[] calldata currencies) external onlyRole(MINTER_ROLE) {
         IPrideNFT _token = IPrideNFT(token);
         INFTMarket _market = INFTMarket(market);
+        uint256[] memory ids;
         for (uint256 i = 0; i < prices.length; i++) {
-            uint256 tokenId = _token.safeMint(holder);
-            _market.addMarketItem(tokenId, prices[i], currencies[i]);
+            ids[i] = _token.safeMint(holder);
         }
+        _market.setMarketItems(ids, prices, pricingStrategies, currencies);
     }
 
     function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {

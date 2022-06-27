@@ -5,28 +5,29 @@ pragma solidity ^0.8.0;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
+import "./interfaces/IAccessController.sol";
+import "./interfaces/INFTMarket.sol";
+import "./interfaces/IPricingController.sol";
 
-import "./lib/MarketItems.sol";
 
-contract NFTMarket is Pausable, AccessControl {
+contract NFTMarket is INFTMarket, Pausable, AccessControl {
 
-    event MarketItemCreated (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency);
-    event MarketItemUpdated (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency);
-    event MarketItemRemoved (uint256 indexed tokenId);
-    event MarketItemSold (uint256 indexed tokenId, uint256 price, MarketItems.Currency currency, address buyer);
+    event MarketItemUpdated (uint256 indexed tokenId);
+    event MarketItemsUpdated (uint256[] tokenIds);
+    event MarketItemSold (uint256 indexed tokenId, uint256 price, Currency currency, address buyer);
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
-    using MarketItems for MarketItems.Map;
-
-    MarketItems.Map private items;
+    mapping(uint256 => MarketItem) items;
     address public nft;
     address public pride;
     address public erc20;
     address public manager;
     address public holder;
+    address public pricingController;
+    address public accessController;
     address payable public fundraisingWallet;
 
     constructor() {
@@ -71,38 +72,39 @@ contract NFTMarket is Pausable, AccessControl {
         holder = newHolderAddress;
     }
 
-    function getMarketItemByTokenId(uint256 tokenId) external view returns (MarketItems.MarketItem memory) {
-        return items.get(tokenId);
+    function getMarketItemByTokenId(uint256 tokenId) external view returns (MarketItem memory) {
+        return items[tokenId];
     }
 
-    function getMarketItemAt(uint256 position) external view returns (uint256, MarketItems.MarketItem memory) {
-        return items.at(position);
-    }
-
-    function getMarketItemIds() external view returns (uint256[] memory) {
-        return items.keys();
+    function getMarketItems() external view returns (MarketItem[] memory marketItems) {
+        IERC721Enumerable token = IERC721Enumerable(nft);
+        uint256 amount = token.balanceOf(holder);
+        for (uint256 i; i < amount; i++) {
+            uint256 id = token.tokenOfOwnerByIndex(holder, i);
+            marketItems[i] = items[id];
+        }
+        return marketItems;
     }
 
     function getMarketItemsLength() external view returns (uint256) {
-        return items.length();
+        return IERC721Enumerable(nft).balanceOf(holder);
     }
 
-    function addMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
-        require(!items.contains(tokenId), "NFTMarket: This item is already on sale");
-        items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
-        emit MarketItemCreated(tokenId, price, currency);
+    function _setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) internal {
+        items[tokenId] = MarketItem(tokenId, price, pricingStrategy, currency);
     }
 
-    function updateMarketItem(uint256 tokenId, uint256 price, MarketItems.Currency currency) external onlyRole(MANAGER_ROLE) {
-        require(items.contains(tokenId), "NFTMarket: Item not found");
-        items.set(tokenId, MarketItems.MarketItem(tokenId, price, currency));
-        emit MarketItemUpdated(tokenId, price, currency);
+    function setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) override external onlyRole(MANAGER_ROLE) {
+        _setMarketItem(tokenId, price, pricingStrategy, currency);
+        emit MarketItemUpdated(tokenId);
     }
 
-    function removeMarketItem(uint256 tokenId) external onlyRole(MANAGER_ROLE) {
-        require(items.contains(tokenId), "NFTMarket: Item not found");
-        items.remove(tokenId);
-        emit MarketItemRemoved(tokenId);
+    function setMarketItems(uint256[] calldata tokenIds, uint256[] calldata prices, uint256[] calldata pricingStrategies, Currency[] calldata currencies) override external onlyRole(MANAGER_ROLE) {
+        require(tokenIds.length == prices.length && prices.length == pricingStrategies.length && pricingStrategies.length == currencies.length, "NFTMarket: wrong array length");
+        for (uint256 i; i < tokenIds.length; i++) {
+            _setMarketItem(tokenIds[i], prices[i], pricingStrategies[i], currencies[i]);
+        }
+        emit MarketItemsUpdated(tokenIds);
     }
 
     function retrieveERC20(address recipient, address tokenAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -114,22 +116,23 @@ contract NFTMarket is Pausable, AccessControl {
     }
 
     function buy(uint256[] calldata tokenIds) external payable whenNotPaused {
+        require(IAccessController(accessController).hasAccess(msg.sender), "NFTMarket: You do not have access to the sale at the moment");
         uint256 totalAmountPRIDE;
         uint256 totalAmountERC20;
         uint256 totalAmountNative;
         for (uint256 i = 0; i < tokenIds.length; i++) {
-            MarketItems.MarketItem memory item = items.get(tokenIds[i]);
-            if (item.currency == MarketItems.Currency.PRIDE) {
-                totalAmountPRIDE += item.price;
-            } else if (item.currency == MarketItems.Currency.ERC20) {
-                totalAmountERC20 += item.price;
-            } else if (item.currency == MarketItems.Currency.NATIVE) {
-                totalAmountNative += item.price;
+            MarketItem memory item = items[tokenIds[i]];
+            uint256 price = IPricingController(pricingController).calculatePrice(item);
+            if (item.currency == Currency.PRIDE) {
+                totalAmountPRIDE += price;
+            } else if (item.currency == Currency.ERC20) {
+                totalAmountERC20 += price;
+            } else if (item.currency == Currency.NATIVE) {
+                totalAmountNative += price;
             } else {
                 revert("NFTMakret: This item is not available for sale in the specified currency");
             }
-            items.remove(item.tokenId);
-            IERC721(nft).transferFrom(holder, msg.sender, item.tokenId);
+            IERC721Enumerable(nft).transferFrom(holder, msg.sender, item.tokenId);
             emit MarketItemSold(item.tokenId, item.price, item.currency, msg.sender);
         }
         if (totalAmountPRIDE > 0) {

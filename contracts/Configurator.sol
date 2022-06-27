@@ -9,7 +9,6 @@ import "./interfaces/IOwnable.sol";
 import "./interfaces/ITokenDepositor.sol";
 import "./VestingWallet.sol";
 import "./TokenDepositor.sol";
-import "./lib/Stages.sol";
 
 contract Configurator is RecoverableFunds {
 
