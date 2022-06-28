@@ -18,8 +18,6 @@ library AccessLevels {
         mapping(uint256 => AccessLevel) _values;
     }
 
-
-
     /**
      * @dev Adds a key-value pair to a map, or updates the value for an existing
      * key. O(1).

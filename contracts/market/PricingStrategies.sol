@@ -19,22 +19,6 @@ library PricingStrategies {
         mapping(uint256 => PricingStrategy) _values;
     }
 
-    function calculatePriceExcess(Map storage map, uint256 key) internal returns (uint256 sum) {
-        require(contains(map, key), "PricingStrategies.Map: nonexistent key");
-        PricingStrategy storage strategy = map._values[key];
-        uint256 time = strategy.start;
-        uint256 sum;
-        for (uint256 i = 0; i < strategy.intervals.length; i++) {
-            time += strategy.intervals[i];
-            if (block.timestamp < time) {
-                sum += strategy.priceStep;
-            } else {
-                break;
-            }
-        }
-        return sum;
-    }
-
     /**
      * @dev Adds a key-value pair to a map, or updates the value for an existing
      * key. O(1).

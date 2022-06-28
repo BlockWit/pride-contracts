@@ -6,9 +6,9 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/security/Pausable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC721/extensions/IERC721Enumerable.sol";
-import "./interfaces/IAccessController.sol";
-import "./interfaces/INFTMarket.sol";
-import "./interfaces/IPricingController.sol";
+import "../interfaces/IAccessController.sol";
+import "../interfaces/INFTMarket.sol";
+import "../interfaces/IPricingController.sol";
 
 
 contract NFTMarket is INFTMarket, Pausable, AccessControl {
