@@ -21,13 +21,13 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
     mapping(uint256 => MarketItem) items;
-    address public nft;
-    address public pride;
-    address public erc20;
+    IERC721Enumerable public prideNFT;
+    IERC20 public prideToken;
+    IERC20 public erc20;
     address public manager;
     address public holder;
-    address public pricingController;
-    address public accessController;
+    IPricingController public pricingController;
+    IAccessController public accessController;
     address payable public fundraisingWallet;
 
     constructor() {
@@ -48,16 +48,16 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         fundraisingWallet = newFundraisingWalletAddress;
     }
 
-    function setNFT(address newNFTAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        nft = newNFTAddress;
+    function setPrideNFT(address newNFTAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        prideNFT = IERC721Enumerable(newNFTAddress);
     }
 
-    function setPride(address newPrideAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        pride = newPrideAddress;
+    function setPrideToken(address newPrideAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
+        prideToken = IERC20(newPrideAddress);
     }
 
     function setERC20(address newERC20Address) external onlyRole(DEFAULT_ADMIN_ROLE) {
-        erc20 = newERC20Address;
+        erc20 = IERC20(newERC20Address);
     }
 
     function setManager(address newManagerAddress) external onlyRole(DEFAULT_ADMIN_ROLE) {
@@ -72,22 +72,29 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         holder = newHolderAddress;
     }
 
+    function setAccessController(address newAccessControllerAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        accessController = IAccessController(newAccessControllerAddress);
+    }
+
+    function setPricingController(address newPricingControllerAddress) public onlyRole(DEFAULT_ADMIN_ROLE) {
+        pricingController = IPricingController(newPricingControllerAddress);
+    }
+
     function getMarketItemByTokenId(uint256 tokenId) external view returns (MarketItem memory) {
         return items[tokenId];
     }
 
     function getMarketItems() external view returns (MarketItem[] memory marketItems) {
-        IERC721Enumerable token = IERC721Enumerable(nft);
-        uint256 amount = token.balanceOf(holder);
+        uint256 amount = prideNFT.balanceOf(holder);
         for (uint256 i; i < amount; i++) {
-            uint256 id = token.tokenOfOwnerByIndex(holder, i);
+            uint256 id = prideNFT.tokenOfOwnerByIndex(holder, i);
             marketItems[i] = items[id];
         }
         return marketItems;
     }
 
     function getMarketItemsLength() external view returns (uint256) {
-        return IERC721Enumerable(nft).balanceOf(holder);
+        return prideNFT.balanceOf(holder);
     }
 
     function _setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) internal {
@@ -116,13 +123,13 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
     }
 
     function buy(uint256[] calldata tokenIds) external payable whenNotPaused {
-        require(IAccessController(accessController).hasAccess(msg.sender), "NFTMarket: You do not have access to the sale at the moment");
+        require(accessController.hasAccess(msg.sender), "NFTMarket: You do not have access to the sale at the moment");
         uint256 totalAmountPRIDE;
         uint256 totalAmountERC20;
         uint256 totalAmountNative;
         for (uint256 i = 0; i < tokenIds.length; i++) {
             MarketItem memory item = items[tokenIds[i]];
-            uint256 price = IPricingController(pricingController).calculatePrice(item);
+            uint256 price = pricingController.calculatePrice(item);
             if (item.currency == Currency.PRIDE) {
                 totalAmountPRIDE += price;
             } else if (item.currency == Currency.ERC20) {
@@ -132,14 +139,14 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
             } else {
                 revert("NFTMakret: This item is not available for sale in the specified currency");
             }
-            IERC721Enumerable(nft).transferFrom(holder, msg.sender, item.tokenId);
+            prideNFT.transferFrom(holder, msg.sender, item.tokenId);
             emit MarketItemSold(item.tokenId, item.price, item.currency, msg.sender);
         }
         if (totalAmountPRIDE > 0) {
-            IERC20(pride).transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);
+            prideToken.transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);
         }
         if (totalAmountERC20 > 0) {
-            IERC20(erc20).transferFrom(msg.sender, fundraisingWallet, totalAmountERC20);
+            erc20.transferFrom(msg.sender, fundraisingWallet, totalAmountERC20);
         }
         uint256 change = msg.value;
         if (totalAmountNative > 0) {
