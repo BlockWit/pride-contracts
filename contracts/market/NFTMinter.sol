@@ -36,7 +36,7 @@ contract NFTMinter is AccessControl {
     function mintAndAddToMarket(uint256[] calldata prices, uint256[] calldata pricingStrategies, INFTMarket.Currency[] calldata currencies) external onlyRole(MINTER_ROLE) {
         IPrideNFT _token = IPrideNFT(token);
         INFTMarket _market = INFTMarket(market);
-        uint256[] memory ids;
+        uint256[] memory ids = new uint256[](prices.length);
         for (uint256 i = 0; i < prices.length; i++) {
             ids[i] = _token.safeMint(holder);
         }

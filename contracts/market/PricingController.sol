@@ -45,7 +45,7 @@ contract PricingController is IPricingController, RecoverableFunds, AccessContro
         uint256 time = strategy.start;
         for (uint256 i = 0; i < strategy.intervals.length; i++) {
             time += strategy.intervals[i];
-            if (block.timestamp < time) {
+            if (block.timestamp > time) {
                 sum += strategy.priceStep;
             } else {
                 break;
