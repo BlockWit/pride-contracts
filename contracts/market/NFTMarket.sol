@@ -20,7 +20,8 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
 
-    mapping(uint256 => MarketItem) items;
+    mapping(uint256 => MarketItem) public items;
+    mapping(address => Purchase[]) public history;
     IERC721Enumerable public prideNFT;
     IERC20 public prideToken;
     IERC20 public erc20;
@@ -80,7 +81,7 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         pricingController = IPricingController(newPricingControllerAddress);
     }
 
-    function getMarketItemByTokenId(uint256 tokenId) external view returns (MarketItem memory) {
+    function getMarketItem(uint256 tokenId) external view returns (MarketItem memory) {
         return items[tokenId];
     }
 
@@ -97,8 +98,12 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         return prideNFT.balanceOf(holder);
     }
 
+    function getPurchaseHistory(address account) external view returns (Purchase[] memory) {
+        return history[account];
+    }
+
     function _setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) internal {
-        items[tokenId] = MarketItem(tokenId, price, pricingStrategy, currency);
+        items[tokenId] = MarketItem(price, pricingStrategy, currency);
     }
 
     function setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) override external onlyRole(MANAGER_ROLE) {
@@ -139,8 +144,9 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
             } else {
                 revert("NFTMakret: This item is not available for sale in the specified currency");
             }
-            prideNFT.transferFrom(holder, msg.sender, item.tokenId);
-            emit MarketItemSold(item.tokenId, item.price, item.currency, msg.sender);
+            prideNFT.transferFrom(holder, msg.sender, tokenIds[i]);
+            history[msg.sender].push(Purchase(tokenIds[i], price, item.currency));
+            emit MarketItemSold(tokenIds[i], item.price, item.currency, msg.sender);
         }
         if (totalAmountPRIDE > 0) {
             prideToken.transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);

@@ -11,9 +11,14 @@ interface INFTMarket {
     enum Currency { PRIDE, ERC20, NATIVE }
 
     struct MarketItem {
-        uint256 tokenId;
         uint256 price;
         uint256 pricingStrategy;
+        Currency currency;
+    }
+
+    struct Purchase {
+        uint256 tokenId;
+        uint256 price;
         Currency currency;
     }
 
