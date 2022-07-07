@@ -145,7 +145,7 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
                 revert("NFTMakret: This item is not available for sale in the specified currency");
             }
             prideNFT.transferFrom(holder, msg.sender, tokenIds[i]);
-            history[msg.sender].push(Purchase(tokenIds[i], price, item.currency));
+            history[msg.sender].push(Purchase(tokenIds[i], price, item.currency, block.timestamp));
             emit MarketItemSold(tokenIds[i], item.price, item.currency, msg.sender, block.timestamp);
         }
         if (totalAmountPRIDE > 0) {

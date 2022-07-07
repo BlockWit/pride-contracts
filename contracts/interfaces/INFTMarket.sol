@@ -20,6 +20,7 @@ interface INFTMarket {
         uint256 tokenId;
         uint256 price;
         Currency currency;
+        uint256 timestamp;
     }
 
     function setMarketItem(uint256 tokenId, uint256 price, uint256 pricingStrategy, Currency currency) external;
