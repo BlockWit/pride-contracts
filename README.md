@@ -66,7 +66,7 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 * [VestingWallet](https://testnet.bscscan.com/address/0xed3956e63bC7d848950BcC6B2B1c7957d5BBE7a4)
 * [NFT](https://testnet.bscscan.com/token/0x363189488bcd7b928de7f954a131637fac0fe4b0)
 * [NFTMinter](https://testnet.bscscan.com/address/0x2f1DE6Ea281cDA4FB277C12A4c88E5311CA1Fd3e)
-* [NFTMarket](https://testnet.bscscan.com/address/0xf1584519eB9D58fe92e013f9cfbA9F38D42F92Ed)
+* [NFTMarket](https://testnet.bscscan.com/address/0x24a14F9Aa908986EbBB858624B13d48c15510b33)
 * [NFTHolder](https://testnet.bscscan.com/address/0x0dD4215ddd66b0068682c13EFFa610a88b2Cf458)
 * [PricingController](https://testnet.bscscan.com/address/0x54bF1D9518C98E59d28c30299948e321402e971C)
 * [AccessController](https://testnet.bscscan.com/address/0xe9769F0b3327915eaF996e8425ef3dB41b9916c7)
