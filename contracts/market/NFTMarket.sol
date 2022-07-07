@@ -15,7 +15,7 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
 
     event MarketItemUpdated (uint256 indexed tokenId);
     event MarketItemsUpdated (uint256[] tokenIds);
-    event MarketItemSold (uint256 indexed tokenId, uint256 price, Currency currency, address buyer);
+    event MarketItemSold (uint256 indexed tokenId, uint256 price, Currency currency, address buyer, uint256 timestamp);
 
     bytes32 public constant PAUSER_ROLE = keccak256("PAUSER_ROLE");
     bytes32 public constant MANAGER_ROLE = keccak256("MANAGER_ROLE");
@@ -146,7 +146,7 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
             }
             prideNFT.transferFrom(holder, msg.sender, tokenIds[i]);
             history[msg.sender].push(Purchase(tokenIds[i], price, item.currency));
-            emit MarketItemSold(tokenIds[i], item.price, item.currency, msg.sender);
+            emit MarketItemSold(tokenIds[i], item.price, item.currency, msg.sender, block.timestamp);
         }
         if (totalAmountPRIDE > 0) {
             prideToken.transferFrom(msg.sender, fundraisingWallet, totalAmountPRIDE);
