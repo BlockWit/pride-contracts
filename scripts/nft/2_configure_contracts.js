@@ -14,6 +14,8 @@ async function deploy () {
   const MARKET_ADDRESS = args[args.findIndex(argName => argName === '--market') + 1];
   const MINTER_ADDRESS = args[args.findIndex(argName => argName === '--minter') + 1];
   const HOLDER_ADDRESS = args[args.findIndex(argName => argName === '--holder') + 1];
+  const ACCESS_CONTROLLER_ADDRESS = args[args.findIndex(argName => argName === '--access') + 1];
+  const PRICING_CONTROLLER_ADDRESS = args[args.findIndex(argName => argName === '--pricing') + 1];
 
   const nft = await NFT.at(NFT_ADDRESS);
   const market = await NFTMarket.at(MARKET_ADDRESS);
@@ -46,13 +48,13 @@ async function deploy () {
 
   {
     log(`Market. Set NFT address.`);
-    const tx = await market.setNFT(NFT_ADDRESS, {from: deployer});
+    const tx = await market.setPrideNFT(NFT_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
   {
     log(`Market. Set PRIDE address.`);
-    const tx = await market.setPride(TOKEN_ADDRESS, {from: deployer});
+    const tx = await market.setPrideToken(TOKEN_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
@@ -71,6 +73,18 @@ async function deploy () {
   {
     log(`Market. Set fundraising wallet.`);
     const tx = await market.setFundraisingWallet(deployer, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Market. Set AccessController.`);
+    const tx = await market.setAccessController(ACCESS_CONTROLLER_ADDRESS, {from: deployer});
+    log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
+  }
+
+  {
+    log(`Market. Set PricingController.`);
+    const tx = await market.setPricingController(PRICING_CONTROLLER_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 

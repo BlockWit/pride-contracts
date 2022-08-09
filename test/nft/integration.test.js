@@ -73,21 +73,42 @@ describe('NFT', async () => {
       await pricingController.setPricingStrategy(0, now, [time.duration.hours(3)], ether('50'), { from: owner });
     });
 
-    it('should sell tokens for PRIDE', async () => {
-      await pride.approve(market.address, ether('123'), { from: buyer });
-      await market.buy([0], { from: buyer });
-      expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
-    });
-
-    it('should sell tokens for ERC20', async () => {
-      await erc20mock.approve(market.address, ether('345'), { from: buyer });
-      await market.buy([1], { from: buyer });
-      expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
-    });
-
-    it('should sell tokens for native currency', async () => {
-      await market.buy([2], { from: buyer, value: ether('0.678') });
-      expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+    describe('buy', () => {
+      describe('should sell tokens', () => {
+        it('for PRIDE', async () => {
+          await pride.approve(market.address, ether('123'), { from: buyer });
+          await market.buy([0], { from: buyer });
+          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+        });
+        it('for ERC20', async () => {
+          await erc20mock.approve(market.address, ether('345'), { from: buyer });
+          await market.buy([1], { from: buyer });
+          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+        });
+        it('for native currency', async () => {
+          await market.buy([2], { from: buyer, value: ether('0.678') });
+          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+        });
+      });
+      describe('should transfer incoming assets to fundraising wallet', async () => {
+        it('PRIDE', async () => {
+          await pride.approve(market.address, ether('123'), { from: buyer });
+          await market.buy([0], { from: buyer });
+          expect (await pride.balanceOf(fundraisingWallet)).to.be.bignumber.equal(ether('123'));
+        });
+        it('ERC20', async () => {
+          await erc20mock.approve(market.address, ether('345'), { from: buyer });
+          await market.buy([1], { from: buyer });
+          expect (await erc20mock.balanceOf(fundraisingWallet)).to.be.bignumber.equal(ether('345'));
+        });
+        it('Native currency', async () => {
+          const amount = ether('0.678');
+          const balanceBefore = await web3.eth.getBalance(fundraisingWallet);
+          await market.buy([2], { from: buyer, value: amount });
+          const balanceAfter = await web3.eth.getBalance(fundraisingWallet);
+          expect (new BN(balanceAfter).sub(new BN(balanceBefore))).to.be.bignumber.equal(amount);
+        });
+      });
     });
   });
 
