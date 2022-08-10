@@ -17,6 +17,8 @@ async function deploy () {
   const ACCESS_CONTROLLER_ADDRESS = args[args.findIndex(argName => argName === '--access') + 1];
   const PRICING_CONTROLLER_ADDRESS = args[args.findIndex(argName => argName === '--pricing') + 1];
 
+  const FUNDRAISING_ADDRESS = '0xaD98f024070c204c26950Aa4E75f51aDA437eE33';
+
   const nft = await NFT.at(NFT_ADDRESS);
   const market = await NFTMarket.at(MARKET_ADDRESS);
   const minter = await NFTMinter.at(MINTER_ADDRESS);
@@ -72,7 +74,7 @@ async function deploy () {
 
   {
     log(`Market. Set fundraising wallet.`);
-    const tx = await market.setFundraisingWallet(deployer, {from: deployer});
+    const tx = await market.setFundraisingWallet(FUNDRAISING_ADDRESS, {from: deployer});
     log(`Result: successful tx: @tx{${tx.receipt.transactionHash}}`);
   }
 
