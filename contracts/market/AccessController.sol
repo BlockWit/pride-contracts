@@ -26,6 +26,15 @@ contract AccessController is IAccessController, RecoverableFunds, AccessControl 
         return accessLevels.keys();
     }
 
+    function getAccessTime(address account) override external view returns (uint256) {
+        if (account == address(0)) return accessLevels.get(0).start;
+        uint256 timestamp;
+        for (uint8 i = 0; i <= accountLevels[account]; i++) {
+            timestamp = accessLevels.get(i).start;
+        }
+        return timestamp;
+    }
+
     function setAccessLevel(uint256 key, uint256 start, uint256 end) external onlyRole(DEFAULT_ADMIN_ROLE) {
         if (accessLevels.contains(key)) {
             AccessLevels.AccessLevel storage level = accessLevels.get(key);

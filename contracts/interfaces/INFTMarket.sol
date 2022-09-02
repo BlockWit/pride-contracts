@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 
 pragma solidity ^0.8.0;
+import "./IPricingController.sol";
 
 
 /**
@@ -14,6 +15,12 @@ interface INFTMarket {
         uint256 price;
         uint256 pricingStrategy;
         Currency currency;
+    }
+
+    struct MarketItemWithPrices {
+        uint256 tokenId;
+        Currency currency;
+        IPricingController.PriceStep[] prices;
     }
 
     struct Purchase {

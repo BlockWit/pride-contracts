@@ -81,6 +81,10 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         pricingController = IPricingController(newPricingControllerAddress);
     }
 
+    function getAccessTime(address account) external view returns (uint256) {
+        return accessController.getAccessTime(account);
+    }
+
     function getMarketItem(uint256 tokenId) external view returns (MarketItem memory) {
         return items[tokenId];
     }
@@ -90,6 +94,15 @@ contract NFTMarket is INFTMarket, Pausable, AccessControl {
         for (uint256 i; i < amount; i++) {
             uint256 id = prideNFT.tokenOfOwnerByIndex(holder, i);
             marketItems[i] = items[id];
+        }
+        return marketItems;
+    }
+
+    function getMarketItemsWithPrices(uint256[] calldata tokenIds) external view returns (MarketItemWithPrices[] memory marketItems) {
+        for (uint256 i; i < tokenIds.length; i++) {
+            MarketItem memory item = items[tokenIds[i]];
+            IPricingController.PriceStep[] memory prices = pricingController.calculatePriceLadder(item);
+            marketItems[i] = MarketItemWithPrices(tokenIds[i], item.currency, prices);
         }
         return marketItems;
     }
