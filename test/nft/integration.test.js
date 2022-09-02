@@ -1,5 +1,5 @@
 const { accounts, contract, web3 } = require('@openzeppelin/test-environment');
-const { BN, ether, expectEvent, expectRevert, time } = require('@openzeppelin/test-helpers');
+const { BN, ether, expectEvent, expectRevert, time, constants } = require('@openzeppelin/test-helpers');
 const { expect } = require('chai');
 
 const PrideNFT = contract.fromArtifact('PrideNFT');
@@ -11,9 +11,9 @@ const NFTMarket = contract.fromArtifact('NFTMarket');
 const NFTMinter = contract.fromArtifact('NFTMinter');
 const ERC20Mock = contract.fromArtifact('ERC20Mock');
 
-const [owner, manager, fundraisingWallet, buyer] = accounts;
+const [owner, manager, fundraisingWallet, buyer1, buyer2] = accounts;
 
-describe('NFT', async () => {
+describe('Integration test', async () => {
   let nft;
   let pride;
   let holder;
@@ -35,8 +35,8 @@ describe('NFT', async () => {
       ERC20Mock.new('BUSD', 'BUSD', owner, ether('10000'), { from: owner })
     ]);
     await Promise.all([
-      pride.transfer(buyer, ether('123'), { from: owner }),
-      erc20mock.transfer(buyer, ether('345'), { from: owner }),
+      pride.transfer(buyer1, ether('123'), { from: owner }),
+      erc20mock.transfer(buyer1, ether('345'), { from: owner }),
     ]);
     await Promise.all([
       nft.grantRole(web3.utils.keccak256("MINTER_ROLE"), minter.address, {from: owner }),
@@ -76,41 +76,84 @@ describe('NFT', async () => {
     describe('buy', () => {
       describe('should sell tokens', () => {
         it('for PRIDE', async () => {
-          await pride.approve(market.address, ether('123'), { from: buyer });
-          await market.buy([0], { from: buyer });
-          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+          await pride.approve(market.address, ether('123'), { from: buyer1 });
+          await market.buy([0], { from: buyer1 });
+          expect (await nft.balanceOf(buyer1)).to.be.bignumber.equal(new BN('1'));
         });
         it('for ERC20', async () => {
-          await erc20mock.approve(market.address, ether('345'), { from: buyer });
-          await market.buy([1], { from: buyer });
-          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+          await erc20mock.approve(market.address, ether('345'), { from: buyer1 });
+          await market.buy([1], { from: buyer1 });
+          expect (await nft.balanceOf(buyer1)).to.be.bignumber.equal(new BN('1'));
         });
         it('for native currency', async () => {
-          await market.buy([2], { from: buyer, value: ether('0.678') });
-          expect (await nft.balanceOf(buyer)).to.be.bignumber.equal(new BN('1'));
+          await market.buy([2], { from: buyer1, value: ether('0.678') });
+          expect (await nft.balanceOf(buyer1)).to.be.bignumber.equal(new BN('1'));
         });
       });
       describe('should transfer incoming assets to fundraising wallet', async () => {
         it('PRIDE', async () => {
-          await pride.approve(market.address, ether('123'), { from: buyer });
-          await market.buy([0], { from: buyer });
+          await pride.approve(market.address, ether('123'), { from: buyer1 });
+          await market.buy([0], { from: buyer1 });
           expect (await pride.balanceOf(fundraisingWallet)).to.be.bignumber.equal(ether('123'));
         });
         it('ERC20', async () => {
-          await erc20mock.approve(market.address, ether('345'), { from: buyer });
-          await market.buy([1], { from: buyer });
+          await erc20mock.approve(market.address, ether('345'), { from: buyer1 });
+          await market.buy([1], { from: buyer1 });
           expect (await erc20mock.balanceOf(fundraisingWallet)).to.be.bignumber.equal(ether('345'));
         });
         it('Native currency', async () => {
           const amount = ether('0.678');
           const balanceBefore = await web3.eth.getBalance(fundraisingWallet);
-          await market.buy([2], { from: buyer, value: amount });
+          await market.buy([2], { from: buyer1, value: amount });
           const balanceAfter = await web3.eth.getBalance(fundraisingWallet);
           expect (new BN(balanceAfter).sub(new BN(balanceBefore))).to.be.bignumber.equal(amount);
         });
       });
     });
-  });
 
+    describe('getMarketItems', () => {
+      it('should return full list of market items', async () => {
+        const items = await market.getMarketItems();
+        expect(items.length).to.be.equal(3);
+      });
+    });
+
+    describe('getMarketItemsWithPrices', () => {
+      it('should return full information about market items', async () => {
+        const items = await market.getMarketItemsWithPrices([0, 1, 3]);
+        expect(items.length).to.be.equal(3);
+      });
+    });
+
+    describe('getAccessTime', () => {
+      let level0AccessTime;
+      let level1AccessTime;
+
+      beforeEach(async () => {
+        const now = await time.latest();
+        level0AccessTime = now.add(time.duration.hours(2));
+        level1AccessTime = now.add(time.duration.hours(1));
+        await accessController.setAccessLevel(0, level0AccessTime, level0AccessTime.add(time.duration.years(1)), { from: owner });
+        await accessController.setAccessLevel(1, level1AccessTime, level1AccessTime.add(time.duration.hours(1)), { from: owner });
+        await accessController.setAccountLevels([buyer1, buyer2], [0, 1], { from: owner });
+      });
+      describe('for non-zero address', () => {
+        it('should return correct timestamp for users with access level 0', async () => {
+          const timestamp = await market.getAccessTime(buyer1);
+          expect(timestamp).to.be.bignumber.equal(level0AccessTime);
+        });
+        it('should return correct timestamp for users with access level 1', async () => {
+          const timestamp = await market.getAccessTime(buyer2);
+          expect(timestamp).to.be.bignumber.equal(level1AccessTime);
+        });
+      });
+      describe('for zero address', () => {
+        it('should return timestamp the same as for users with access level 0', async () => {
+          const timestamp = await market.getAccessTime(constants.ZERO_ADDRESS);
+          expect(timestamp).to.be.bignumber.equal(level0AccessTime);
+        });
+      });
+    });
+  });
 
 });

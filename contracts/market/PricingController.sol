@@ -54,8 +54,9 @@ contract PricingController is IPricingController, RecoverableFunds, AccessContro
         return item.price + sum;
     }
 
-    function calculatePriceLadder(INFTMarket.MarketItem calldata item) override external view returns (PriceStep[] memory prices) {
+    function calculatePriceLadder(INFTMarket.MarketItem calldata item) override external view returns (PriceStep[] memory) {
         PricingStrategies.PricingStrategy storage strategy = pricingStrategies.get(item.pricingStrategy);
+        PriceStep[] memory prices = new PriceStep[](strategy.intervals.length + 1);
         prices[0] = PriceStep(0, item.price);
         uint256 time = strategy.start;
         uint256 price = item.price;
