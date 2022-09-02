@@ -73,10 +73,10 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 * [StakingProgram](https://testnet.bscscan.com/address/0x08906119c49a8D569A52e14597256c319457876d)
 * [NFT](https://testnet.bscscan.com/token/0x363189488bcd7b928de7f954a131637fac0fe4b0)
 * [NFTMinter](https://testnet.bscscan.com/address/0x2f1DE6Ea281cDA4FB277C12A4c88E5311CA1Fd3e)
-* [NFTMarket](https://testnet.bscscan.com/address/0x24a14F9Aa908986EbBB858624B13d48c15510b33)
+* [NFTMarket]( https://testnet.bscscan.com/address/0xdb897c86019f5802A56500696D5eBE3cecf50878#code)
 * [NFTHolder](https://testnet.bscscan.com/address/0x0dD4215ddd66b0068682c13EFFa610a88b2Cf458)
-* [PricingController](https://testnet.bscscan.com/address/0x54bF1D9518C98E59d28c30299948e321402e971C)
-* [AccessController](https://testnet.bscscan.com/address/0xe9769F0b3327915eaF996e8425ef3dB41b9916c7)
+* [PricingController](https://testnet.bscscan.com/address/0x434C98cA90bc0EEC763e7B931F5e1CF9652cb9eB#code)
+* [AccessController](https://testnet.bscscan.com/address/0x5b33963f0dB5D971A1178B08a3aE2A0B5c563b94#code)
 
 You can find test log [here](docs/testnet.log.md)
 
