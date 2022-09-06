@@ -39,7 +39,7 @@ contract AccessController is IAccessController, RecoverableFunds, AccessControl 
         if (accessLevels.contains(key)) {
             AccessLevels.AccessLevel storage level = accessLevels.get(key);
             level.start = start;
-            level.end = start;
+            level.end = end;
         } else {
             accessLevels.set(key, AccessLevels.AccessLevel(start, end));
         }
