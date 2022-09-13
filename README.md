@@ -61,10 +61,10 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 * [StakingProgram](https://bscscan.com/address/0x723C896e82a6c4A617d4e1eace1Bb43070D8A2f3)
 * [NFT](https://bscscan.com/token/0xB77C17b912c032cbb1B3e84F68C469A2a160D45a)
 * [NFTMinter](https://bscscan.com/address/0x6C19392D9F8E85Ba8b50fc564798EE97F6B8D02D)
-* [NFTMarket](https://bscscan.com/address/0xf61dAeF3641fD40EbFeE14118040aba1d6330eeF)
+* [NFTMarket](https://bscscan.com/address/0x2eC262EF3879287A57b037e97eDD5E20ec8935f4)
 * [NFTHolder](https://bscscan.com/address/0x3b9D4c6b00c224A9EecD6520504CB6675be502c3)
 * [PricingController](https://bscscan.com/address/0x072EeA2846f0A89c1f009BF5b18E14aBC32367d4)
-* [AccessController](https://bscscan.com/address/0xab14BF2b2C9EdF742dd784440D4BB193B2f3b87f)
+* [AccessController](https://bscscan.com/address/0xd03b54828883Eb6Bd6CB68298abD4d5E339a4647)
 
 ## Test network configuration (BSC Testnet)
 ### Contracts
