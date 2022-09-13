@@ -62,16 +62,18 @@ module.exports = {
     // Useful for deploying to a public network.
     // NB: It's important to wrap the provider as a function.
     bscmainnet: {
-      provider: () => new HDWalletProvider(ETH_MAIN_PRIVATE_KEYS, `https://bsc-dataseed.binance.org`),
+      provider: () => new HDWalletProvider(ETH_MAIN_PRIVATE_KEYS, `https://bscrpc.com`),
       network_id: 56,
+      gas: 12500000,
       gasPrice: 5000000000,  // 5 Gwei
       confirmations: 2,
       timeoutBlocks: 200,
     },
     bsctestnet: {
+      networkCheckTimeout: 10000,
       provider: () => new HDWalletProvider(ETH_TEST_MNEMONIC, `https://data-seed-prebsc-1-s1.binance.org:8545`),
       network_id: 97,
-      gasPrice: 18000000000,  // 18 Gwei
+      gasPrice: 10000000000,  // 10 Gwei
       confirmations: 2,
       timeoutBlocks: 200,
     },
@@ -131,6 +133,7 @@ module.exports = {
   ],
 
   api_keys: {
+    bscscan: CONFIG.BSCSCAN_KEY,
     etherscan: CONFIG.ETHERSCAN_KEY
   }
 
