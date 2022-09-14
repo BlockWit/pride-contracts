@@ -3,6 +3,7 @@ const NFTMarket = artifacts.require('NFTMarket');
 const NFTMinter = artifacts.require('NFTMinter');
 const NFTHolder = artifacts.require('NFTHolder');
 const PricingController = artifacts.require('PricingController');
+const SimpleNFTMinter = artifacts.require('SimpleNFTMinter');
 const AccessController = artifacts.require('AccessController');
 const { logger } = require('../util');
 
@@ -27,6 +28,9 @@ async function deploy () {
 
   const holder = await NFTHolder.new({ from: deployer });
   log(`Holder deployed: @address{${holder.address}}`);
+
+  const simpleMinter = await SimpleNFTMinter.new({ from: deployer });
+  log(`SimpleNFTMinter deployed: @address{${simpleMinter.address}}`);
 
 }
 

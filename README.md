@@ -22,6 +22,7 @@ Pride smart-contract
 5. _PrideNFT_ - NFT token contract
 6. _NFTMinter_ - Helper contract for batch NFT minting
 7. _NFTMarket_ - Smart contract for the initial sale of NFT tokens
+8. _SimpleNFTMinter_ - Helper contract for batch minting
 
 ### How to work with this project
 #### To start working with the contracts, please, follow theese steps for each contract:
@@ -65,6 +66,7 @@ EXODUS does not support BEP20, but provides the ability to export the private ke
 * [NFTHolder](https://bscscan.com/address/0x3b9D4c6b00c224A9EecD6520504CB6675be502c3)
 * [PricingController](https://bscscan.com/address/0x072EeA2846f0A89c1f009BF5b18E14aBC32367d4)
 * [AccessController](https://bscscan.com/address/0xd03b54828883Eb6Bd6CB68298abD4d5E339a4647)
+* [SimpleNFTMinter](https://bscscan.com/address/0x2EB793c6E480e7F920764F9c87b067f5089E9EbF)
 
 ## Test network configuration (BSC Testnet)
 ### Contracts
